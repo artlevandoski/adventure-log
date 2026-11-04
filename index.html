@@ -1,0 +1,856 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Firetop Adventure Log</title>
+<meta name="description" content="A phone-friendly adventure sheet for Fighting Fantasy gamebooks: stats, combat, Luck tests, inventory, paragraph trail and dungeon maps.">
+<meta name="theme-color" content="#151413">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Adventure Log">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icons/favicon-48.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preload" href="fonts/pirata-one-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+@font-face{font-family:'Pirata One';font-style:normal;font-weight:400;font-display:swap;src:url(fonts/pirata-one-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'Alegreya';font-style:normal;font-weight:400;font-display:swap;src:url(fonts/alegreya-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'Alegreya';font-style:italic;font-weight:400;font-display:swap;src:url(fonts/alegreya-latin-400-italic.woff2) format('woff2')}
+@font-face{font-family:'Alegreya';font-style:normal;font-weight:500;font-display:swap;src:url(fonts/alegreya-latin-500-normal.woff2) format('woff2')}
+@font-face{font-family:'Alegreya';font-style:normal;font-weight:700;font-display:swap;src:url(fonts/alegreya-latin-700-normal.woff2) format('woff2')}
+@font-face{font-family:'Alegreya SC';font-style:normal;font-weight:500;font-display:swap;src:url(fonts/alegreya-sc-latin-500-normal.woff2) format('woff2')}
+@font-face{font-family:'Alegreya SC';font-style:normal;font-weight:700;font-display:swap;src:url(fonts/alegreya-sc-latin-700-normal.woff2) format('woff2')}
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;-webkit-text-size-adjust:100%}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+<style>
+/* Layout: one narrow column like a pocket adventure sheet; ink-ruled boxes; fixed bottom tab bar. */
+:root{
+  --paper:#f2f1ed; --panel:#fbfbf9; --ink:#151413; --ink-2:#56524c; --wash:#e3e1db;
+  --blood:#9a1d1a; --good:#2e6a39; --hatch:rgba(21,20,19,.07);
+  --display:"Pirata One","UnifrakturCook","Old English Text MT",Georgia,serif;
+  --body:"Alegreya",Georgia,"Times New Roman",serif;
+  --label:"Alegreya SC","Alegreya",Georgia,serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#131211; --panel:#1b1a18; --ink:#ebe6dc; --ink-2:#a69f94; --wash:#2a2825;
+  --blood:#e0574c; --good:#73b67e; --hatch:rgba(235,230,220,.05); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#131211; --panel:#1b1a18; --ink:#ebe6dc; --ink-2:#a69f94; --wash:#2a2825;
+  --blood:#e0574c; --good:#73b67e; --hatch:rgba(235,230,220,.05); color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.45;
+  background-image:repeating-linear-gradient(-58deg,var(--hatch) 0 1px,transparent 1px 7px);background-attachment:fixed}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--paper)}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--blood);outline-offset:2px}
+
+.wrap{max-width:560px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px 120px;display:flex;flex-direction:column;gap:16px}
+
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--paper);border-bottom:2.5px solid var(--ink)}
+header.top .in{max-width:560px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:10px;display:flex;align-items:center;gap:10px}
+.top h1{font-family:var(--display);font-weight:400;font-size:1.55rem;line-height:1.05;margin:0;flex:1;min-width:0;text-wrap:balance}
+.top .sub{display:block;font-family:var(--label);font-size:.8rem;letter-spacing:.06em;color:var(--ink-2);margin-top:2px}
+.sync{font-family:var(--label);font-size:.72rem;letter-spacing:.05em;color:var(--ink-2);white-space:nowrap}
+
+h2{font-family:var(--display);font-weight:400;font-size:1.6rem;margin:0;line-height:1.1}
+h3{font-family:var(--label);font-weight:700;font-size:1rem;letter-spacing:.06em;margin:0}
+p{margin:0}
+.muted{color:var(--ink-2)}
+.small{font-size:.88rem}
+
+.box{background:var(--panel);border:2.5px solid var(--ink);border-radius:3px;padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.box.heavy{box-shadow:4px 4px 0 var(--ink)}
+.box-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+
+.btn{border:2px solid var(--ink);background:var(--panel);border-radius:3px;padding:10px 14px;min-height:46px;font-family:var(--label);font-weight:700;letter-spacing:.05em;font-size:.95rem;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.btn:active{transform:translate(1px,1px)}
+.btn.ink{background:var(--ink);color:var(--paper)}
+.btn.blood{background:var(--blood);border-color:var(--blood);color:#fff}
+.btn.ghost{border-color:transparent;background:transparent;text-decoration:underline;text-underline-offset:3px}
+.btn.sm{min-height:38px;padding:6px 10px;font-size:.85rem}
+.btn[disabled]{opacity:.4;pointer-events:none}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.row>.grow{flex:1;min-width:0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* stat boxes */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stats.four{grid-template-columns:repeat(2,1fr)}
+.stat{background:var(--panel);border:2.5px solid var(--ink);border-radius:3px;padding:10px 6px 8px;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0}
+.stat .name{font-family:var(--display);font-size:1.3rem;line-height:1}
+.stat .val{font-family:var(--display);font-size:3rem;line-height:1;font-variant-numeric:lining-nums tabular-nums}
+.stat .val.low{color:var(--blood)}
+.stat .init{font-family:var(--label);font-size:.78rem;letter-spacing:.05em;color:var(--ink-2)}
+.pm{display:flex;gap:6px}
+.pm button{width:42px;height:40px;border:2px solid var(--ink);background:var(--paper);border-radius:3px;font-size:1.3rem;line-height:1;font-weight:700}
+.pm.mini button{width:32px;height:30px;font-size:1rem}
+
+.num{font-family:var(--display);font-size:2.2rem;line-height:1;font-variant-numeric:lining-nums tabular-nums}
+
+input[type=text],input[type=number],textarea,select{width:100%;border:2px solid var(--ink);border-radius:3px;background:var(--paper);padding:10px;min-height:46px}
+textarea{min-height:140px;resize:vertical;line-height:1.4}
+label.f{display:flex;flex-direction:column;gap:4px;font-family:var(--label);font-size:.85rem;letter-spacing:.05em;min-width:0}
+
+.list{display:flex;flex-direction:column}
+.list .it{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px dashed var(--ink-2)}
+.list .it:last-child{border-bottom:0}
+.list .it span{flex:1;min-width:0;overflow-wrap:anywhere}
+.x{border:0;background:none;color:var(--ink-2);font-size:1.4rem;width:36px;height:36px;line-height:1}
+
+.tag{font-family:var(--label);font-size:.72rem;letter-spacing:.07em;border:1.5px solid var(--ink);border-radius:2px;padding:1px 6px;white-space:nowrap}
+.tag.dead{border-color:var(--blood);color:var(--blood)}
+.tag.won{border-color:var(--good);color:var(--good)}
+
+/* dice */
+.dice{display:flex;gap:8px;align-items:center}
+.die{width:44px;height:44px;border:2.5px solid var(--ink);border-radius:7px;background:var(--panel);display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);padding:5px}
+.die i{width:8px;height:8px;border-radius:50%;place-self:center}
+.die i.on{background:var(--ink)}
+.die.sm{width:30px;height:30px;padding:3px;border-width:2px;border-radius:5px}
+.die.sm i{width:5px;height:5px}
+.rolling .die{animation:shake .35s ease}
+@keyframes shake{0%{transform:rotate(0)}25%{transform:rotate(-14deg) translateY(-3px)}60%{transform:rotate(10deg)}100%{transform:rotate(0)}}
+@media (prefers-reduced-motion:reduce){.rolling .die{animation:none}}
+
+.verdict{font-family:var(--display);font-size:1.7rem;line-height:1}
+.verdict.good{color:var(--good)} .verdict.bad{color:var(--blood)}
+
+/* monsters, shaped like the printed encounter boxes */
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mon{border:2.5px solid var(--ink);border-radius:3px;background:var(--panel);padding:8px 10px;display:grid;grid-template-columns:auto 1fr;column-gap:8px;row-gap:2px;text-align:left;min-width:0}
+.mon b{font-family:var(--display);font-weight:400;font-size:1.05rem;justify-self:end}
+.mon span{font-variant-numeric:tabular-nums;overflow-wrap:anywhere;min-width:0}
+.mon.sel{box-shadow:4px 4px 0 var(--blood);border-color:var(--blood)}
+.mon.down{opacity:.5}
+.mon.down span.mn{text-decoration:line-through}
+.vs{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;text-align:center}
+.vs .side{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0}
+.vs .who{font-family:var(--label);font-size:.85rem;letter-spacing:.05em;overflow-wrap:anywhere}
+.vs .mid{font-family:var(--display);font-size:1.4rem;color:var(--ink-2)}
+.log{font-size:.88rem;color:var(--ink-2);display:flex;flex-direction:column;gap:2px;max-height:150px;overflow:auto}
+
+/* journey */
+.para{display:flex;align-items:center;gap:12px}
+.para .big{font-family:var(--display);font-size:4.2rem;line-height:.9;font-variant-numeric:lining-nums tabular-nums;min-width:2ch}
+.trail{display:flex;flex-wrap:wrap;gap:6px}
+.trail span{font-variant-numeric:tabular-nums;border:1.5px solid var(--ink-2);border-radius:2px;padding:1px 7px;font-size:.9rem}
+.trail span:last-child{border-color:var(--ink);background:var(--ink);color:var(--paper)}
+
+/* library */
+.book{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start}
+.book .no{font-family:var(--display);font-size:2.6rem;line-height:.9;width:2ch;text-align:center}
+.book .meta{display:flex;flex-direction:column;gap:6px;min-width:0}
+.book h2{font-size:1.45rem}
+
+.banner{border:2.5px solid var(--blood);background:var(--panel);color:var(--blood);border-radius:3px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.banner.won{border-color:var(--good);color:var(--good)}
+details>summary{cursor:pointer;font-family:var(--label);font-weight:700;letter-spacing:.05em;list-style:none;display:flex;justify-content:space-between}
+details>summary::after{content:"+";font-size:1.3rem;line-height:1}
+details[open]>summary::after{content:"−"}
+details>summary::-webkit-details-marker{display:none}
+
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--ink);padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+nav.tabs .in{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr)}
+nav.tabs button{background:none;border:0;color:var(--paper);opacity:.62;padding:10px 2px 12px;font-family:var(--display);font-size:1.15rem;line-height:1}
+nav.tabs button[aria-current="page"]{opacity:1;box-shadow:inset 0 3px 0 var(--blood)}
+
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(76px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--paper);padding:10px 16px;border-radius:3px;font-family:var(--label);letter-spacing:.04em;z-index:8;max-width:calc(100% - 32px);text-align:center}
+/* dungeon map */
+.maps{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.chip{border:2px solid var(--ink);border-radius:2px;background:var(--panel);padding:6px 10px;font-family:var(--label);font-weight:700;letter-spacing:.04em;font-size:.85rem;white-space:nowrap;min-height:38px}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.mapwrap{overflow:auto;border:2.5px solid var(--ink);border-radius:3px;max-height:60vh;min-height:260px;
+  background-color:var(--panel);background-image:radial-gradient(var(--wash) 1.4px,transparent 1.5px);background-size:calc(var(--cw)*1px) calc(var(--ch)*1px);background-position:calc(var(--cw)*.5px) calc(var(--ch)*.5px)}
+.mapwrap svg{display:block}
+.mapwrap .room rect.body{fill:var(--panel);stroke:var(--ink);stroke-width:2.5}
+.mapwrap .room.cur rect.body{stroke:var(--blood);stroke-width:4}
+.mapwrap .room .shadow{fill:var(--ink)}
+.mapwrap .room.sel .shadow{fill:var(--blood)}
+.mapwrap text{fill:var(--ink);font-family:var(--body)}
+.mapwrap .pno{font-family:var(--display);font-size:24px}
+.mapwrap .rname{font-size:11.5px}
+.mapwrap .rtag{font-family:var(--label);font-size:10px;font-weight:700;fill:var(--blood);letter-spacing:.06em}
+.mapwrap .here{font-family:var(--label);font-size:9.5px;font-weight:700;fill:var(--blood);letter-spacing:.08em}
+.mapwrap .corr{stroke:var(--ink);stroke-width:7;stroke-linecap:round}
+.mapwrap .corr-in{stroke:var(--panel);stroke-width:3;stroke-linecap:round}
+.mapwrap .door{fill:var(--panel);stroke:var(--ink);stroke-width:2}
+.mapwrap .door.locked{fill:var(--blood);stroke:var(--blood)}
+.mapwrap .ghost rect{fill:transparent;stroke:var(--ink-2);stroke-width:1.5;stroke-dasharray:5 4}
+.mapwrap .ghost text{fill:var(--ink-2);font-size:26px}
+.mapwrap .hot circle{fill:var(--paper);stroke:var(--blood);stroke-width:2}
+.mapwrap .hot text{fill:var(--blood);font-family:var(--label);font-size:10px;font-weight:700}
+.mapwrap [data-act]{cursor:pointer}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:.82rem;color:var(--ink-2);align-items:center}
+.legend svg{vertical-align:middle}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.inv-group{display:flex;flex-direction:column;gap:2px}
+.inv-group h4{margin:6px 0 0;font-family:var(--label);font-size:.78rem;letter-spacing:.08em;color:var(--ink-2);font-weight:700}
+.item{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px dashed var(--ink-2)}
+.item:last-child{border-bottom:0}
+.item .nm{flex:1;min-width:0;text-align:left;background:none;border:0;padding:0;overflow-wrap:anywhere}
+.item .nm small{display:block;color:var(--ink-2);font-size:.82rem}
+.qty{font-family:var(--display);font-size:1.25rem;font-variant-numeric:tabular-nums}
+.edit{background:var(--wash);border-radius:3px;padding:10px;display:flex;flex-direction:column;gap:10px;margin-bottom:6px}
+.kv{display:flex;align-items:center;gap:8px;justify-content:space-between}
+.kv .lbl{font-family:var(--label);font-size:.85rem;letter-spacing:.04em}
+.kv .v{font-family:var(--display);font-size:1.3rem;min-width:2.2ch;text-align:center;font-variant-numeric:tabular-nums}
+.weap{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:.9rem}
+.foot{font-size:.8rem;color:var(--ink-2);text-align:center}
+@media (max-width:380px){.stat .val{font-size:2.5rem}.pm button{width:36px}}
+</style>
+</head>
+<body>
+
+<header class="top"><div class="in">
+  <div class="grow" style="flex:1;min-width:0"><h1 id="hTitle">Adventure Log</h1><span class="sub" id="hSub"></span></div>
+  <button class="btn sm" id="undoBtn" data-act="undo" hidden>Undo</button>
+  <span class="sync" id="sync">Loading</span>
+</div></header>
+
+<main class="wrap" id="app"></main>
+<nav class="tabs" id="tabs" hidden><div class="in">
+  <button data-tab="sheet">Sheet</button><button data-tab="fight">Fight</button><button data-tab="journey">Journey</button><button data-tab="map">Map</button><button data-tab="books">Books</button>
+</div></nav>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+/* ---------- book presets ---------- */
+const STD_KIT=['Sword','Leather armour','Lantern','Backpack'];
+const SJ='Steve Jackson', IL='Ian Livingstone';
+const PRESETS = {
+  warlock:{id:'warlock',no:'1',title:'The Warlock of Firetop Mountain',authors:'Steve Jackson & Ian Livingstone',sheet:'standard',
+    equipment:STD_KIT,provisions:10,heal:4,gold:0,potions:true,magicRoll:'',
+    blurb:'Find the Warlock Zagor’s treasure deep inside Firetop Mountain.'},
+  deathtrap:{id:'deathtrap',no:'2',title:'Deathtrap Dungeon',authors:IL,sheet:'standard',equipment:STD_KIT,provisions:10,heal:4,gold:0,potions:true,
+    pending:'Starting kit, gold and potion not yet checked against the book.',blurb:'Enter Baron Sukumvit’s labyrinth in Fang and try to come out alive.'},
+  thieves:{id:'thieves',no:'3',title:'City of Thieves',authors:IL,sheet:'standard',equipment:STD_KIT,provisions:10,heal:4,gold:0,potions:true,
+    pending:'Starting kit, gold and potion not yet checked against the book.',blurb:'Search the streets of Port Blacksand for help against a night-time terror.'},
+  citadel:{id:'citadel',no:'4',title:'The Citadel of Chaos',authors:SJ,sheet:'magic',magicRoll:'2d6+6',equipment:['Sword','Leather armour','Backpack'],provisions:0,heal:4,gold:0,potions:false,
+    pending:'Magic score (2 dice + 6) is confirmed. Starting kit and spell list not yet checked against the book.',blurb:'Storm the citadel of the sorcerer Balthus Dire with spells as your weapons.'},
+  forest:{id:'forest',no:'5',title:'The Forest of Doom',authors:IL,sheet:'standard',equipment:STD_KIT,provisions:10,heal:4,gold:0,potions:true,
+    pending:'Starting gold and kit not yet checked against the book.',blurb:'Hunt Darkwood Forest for the lost pieces of a dwarven war-hammer.'},
+  lizard:{id:'lizard',no:'6',title:'Island of the Lizard King',authors:IL,sheet:'standard',equipment:STD_KIT,provisions:10,heal:4,gold:0,potions:true,
+    pending:'Starting kit, gold and potion not yet checked against the book.',blurb:'Sail to Fire Island to free the captives of the Lizard King.'},
+  scorpion:{id:'scorpion',no:'7',title:'Scorpion Swamp',authors:SJ,sheet:'standard',equipment:['Sword','Chainmail armour','Backpack'],provisions:0,heal:4,gold:0,potions:false,spells:true,
+    choice:{label:'Your patron',options:['Selator (Good)','Grimslade (Evil)','Poomchukker (Neutral)']},
+    pending:'Starting kit and the wizard choice are confirmed. Spell rules not yet checked against the book.',blurb:'Cross the treacherous swamp on a quest for one of three wizards.'},
+  snowwitch:{id:'snowwitch',no:'8',title:'Caverns of the Snow Witch',authors:IL,sheet:'standard',equipment:STD_KIT,provisions:10,heal:4,gold:0,potions:true,
+    pending:'Starting kit, gold and potion not yet checked against the book.',blurb:'Track the Snow Witch to her ice caverns in the frozen north.'},
+  hell:{id:'hell',no:'9',title:'House of Hell',titles:['House of Hell','House of Hades'],authors:SJ,sheet:'standard',equipment:[],provisions:0,heal:4,gold:0,potions:false,fear:'1d6+6',
+    pending:'Fear score and starting with nothing are confirmed. The penalty for fighting unarmed is not yet checked against the book.',blurb:'Stranded on a stormy night, you knock on the door of the wrong house.'},
+  havoc:{id:'havoc',no:'10',title:'Creature of Havoc',authors:SJ,sheet:'standard',equipment:[],provisions:0,heal:4,gold:0,potions:false,
+    pending:'Its special combat rules (instant kills on doubles, lighter wounds, Luck to stop a wound) are not built in yet. Apply them by hand for now.',blurb:'You wake as a nameless beast and must discover what you are.'}
+};
+const POTIONS = {
+  Skill:{label:'Potion of Skill',does:'Restores Skill to its Initial level'},
+  Strength:{label:'Potion of Strength',does:'Restores Stamina to its Initial level'},
+  Fortune:{label:'Potion of Fortune',does:'Adds 1 to Initial Luck and restores Luck to it'}
+};
+
+const KINDS={weapon:'Weapons',armour:'Armour',key:'Keys',treasure:'Treasure',item:'Items'};
+const KIND1={weapon:'Weapon',armour:'Armour',key:'Key',treasure:'Treasure',item:'Item'};
+function guessKind(t){ t=t.toLowerCase();
+  if(/sword|axe|dagger|mace|club|spear|blade|knife|bow|hammer|staff|sabre|scimitar/.test(t)) return 'weapon';
+  if(/armour|armor|shield|helm|mail|gauntlet/.test(t)) return 'armour';
+  if(/\bkey\b|keys/.test(t)) return 'key';
+  if(/gold|gem|jewel|ruby|emerald|sapphire|diamond|pearl|crown|coin|silver/.test(t)) return 'treasure';
+  return 'item'; }
+function makeItem(text,kind){ kind=kind&&kind!=='auto'?kind:guessKind(text);
+  return {id:uid(),text,kind,qty:1,atk:0,dmg:2,inHand:false,note:''}; }
+function normInv(r){ let changed=false;
+  r.equipment=r.equipment.map(e=>{ if(e.kind) return e; changed=true; return {...makeItem(e.text),id:e.id}; });
+  const w=r.equipment.filter(e=>e.kind==='weapon'); if(w.length&&!w.some(e=>e.inHand)){ w[0].inHand=true; changed=true; }
+  if(r.fightMod==null){ r.fightMod=0; changed=true; }
+  return changed; }
+const weaponInHand = r => r.equipment.find(e=>e.kind==='weapon'&&e.inHand);
+
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+const uid = () => Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const d6 = () => { const a=new Uint32Array(1); crypto.getRandomValues(a); return a[0]%6+1; };
+const esc = s => String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const clone = o => JSON.parse(JSON.stringify(o));
+const PIPS={1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
+const die = (n,sm) => `<span class="die${sm?' sm':''}" role="img" aria-label="${n}">${Array.from({length:9},(_,i)=>`<i class="${PIPS[n].includes(i)?'on':''}"></i>`).join('')}</span>`;
+const diceRow = (arr,sm) => `<span class="dice">${arr.map(n=>die(n,sm)).join('')}</span>`;
+function rollFormula(f){ // "2d6+6"
+  const m=/^(\d+)d6(?:\+(\d+))?$/i.exec(String(f||'').replace(/\s/g,'')); if(!m) return null;
+  const dice=Array.from({length:+m[1]},d6); return {dice,total:dice.reduce((a,b)=>a+b,0)+(+m[2]||0)};
+}
+const sum = a => a.reduce((x,y)=>x+y,0);
+
+/* ---------- state ---------- */
+// store.books[bookId] = {config?, runs:{}, activeRunId, updatedAt}
+let store = {books:{}};
+let ui = {view:'books', bookId:null, draft:null, fightSel:null, round:null, luckTest:null, freeRoll:null, armDelete:null};
+const undoStack = [];
+const LS='ff-adventure-log-v1', LSUI='ff-adventure-log-ui';
+try{ const s=JSON.parse(localStorage.getItem(LS)||'null'); if(s&&s.books) store=s; }catch(e){}
+try{ const u=JSON.parse(localStorage.getItem(LSUI)||'null'); if(u){ui.view=u.view||'books'; ui.bookId=u.bookId||null;} }catch(e){}
+
+const bookCfg = id => store.books[id]?.config || PRESETS[id];
+const bookTitle = id => { const c=bookCfg(id); if(!c) return ''; return c.titles ? c.titles[store.books[id]?.titleIdx||0] : c.title; };
+const allBooks = () => { const ids=new Set([...Object.keys(PRESETS),...Object.keys(store.books)]); return [...ids].map(id=>({id,cfg:bookCfg(id),doc:store.books[id]})).filter(b=>b.cfg); };
+const bookDoc = id => (store.books[id] ||= {runs:{},activeRunId:null,updatedAt:0});
+const curRun = () => { const d=store.books[ui.bookId]; return d && d.activeRunId ? d.runs[d.activeRunId] : null; };
+
+/* ---------- persistence: synced per-user store, device cache as fallback ---------- */
+let db=null, userId=null, dirty=new Set(), saveTimer=null, saving=false;
+function setSync(t){ $('#sync').textContent=t; }
+function saveLocal(){ try{localStorage.setItem(LS,JSON.stringify(store)); localStorage.setItem(LSUI,JSON.stringify({view:ui.view,bookId:ui.bookId}));}catch(e){} }
+function touch(bookId){ const d=bookDoc(bookId); d.updatedAt=Date.now(); dirty.add(bookId); saveLocal(); clearTimeout(saveTimer); saveTimer=setTimeout(flush,700); if(db) setSync('Saving…'); }
+async function flush(){
+  if(!db||!userId||saving) return; saving=true;
+  try{ while(dirty.size){ const id=[...dirty][0]; dirty.delete(id);
+      const ref=db.collection('data/users/'+userId).doc(id);
+      if(store.books[id]) await ref.set(clone(store.books[id])); else await ref.delete(); }
+    setSync('Synced');
+  }catch(e){ setSync('Saved on this device'); }
+  saving=false; if(dirty.size) flush();
+}
+async function connect(){
+  const fail=setTimeout(()=>{ if(!db) setSync('Saved on this device'); },10000);
+  try{
+    if(!window.claude?.use){ clearTimeout(fail); setSync('Saved on this device'); return; }
+    const [d,u]=await Promise.all([claude.use('db'),claude.use('user')]);
+    userId = u ? await u.id() : null;
+    if(!d||!userId){ clearTimeout(fail); setSync('Saved on this device'); return; }
+    const snap=await d.collection('data/users/'+userId).get();
+    clearTimeout(fail); db=d;
+    snap.docs.forEach(s=>{ const remote=clone(s.data()); const local=store.books[s.id];
+      if(!local || (remote.updatedAt||0) >= (local.updatedAt||0)) store.books[s.id]=remote; else dirty.add(s.id); });
+    Object.keys(store.books).forEach(id=>{ if(!snap.docs.some(s=>s.id===id)) dirty.add(id); });
+    saveLocal(); render(); setSync('Synced'); if(dirty.size) flush();
+  }catch(e){ clearTimeout(fail); setSync('Saved on this device'); }
+}
+
+function mutate(fn,{undo=true}={}){
+  const id=ui.bookId;
+  if(undo && id){ undoStack.push({id,doc:store.books[id]?clone(store.books[id]):null}); if(undoStack.length>30) undoStack.shift(); }
+  fn(); if(id) touch(id); render();
+}
+
+/* ---------- backup ---------- */
+const STANDALONE = !window.claude;
+const backupData = () => ({app:'adventure-log',version:1,exported:new Date().toISOString(),books:clone(store.books)});
+function restoreFrom(txt,fromFile){
+  let data; try{ data=JSON.parse(txt.trim()); }catch(e){ toast('That isn’t a backup. Copy the whole backup text and try again.'); return; }
+  if(!data || data.app!=='adventure-log' || typeof data.books!=='object'){ toast('That isn’t an Adventure Log backup.'); return; }
+  if(!fromFile && ui.armDelete!=='restore'){ ui.armDelete='restore'; render(); return; }
+  ui.armDelete=null; let n=0;
+  Object.entries(data.books).forEach(([id,b])=>{ const cur=store.books[id];
+    if(!cur || (b.updatedAt||0)>(cur.updatedAt||0)){ store.books[id]=b; n++; touch(id); } });
+  undoStack.length=0; ui.showBackup=false; ui.restoreText=''; render(); toast(n?`Restored ${n} book${n>1?'s':''}`:'Nothing newer in that backup');
+}
+function vBackup(){
+  return `<details class="box"><summary>Backup and restore</summary>
+    <p class="small" style="margin-top:8px">Copy everything (adventures, inventories and maps) to move it to another device or keep it safe.</p>
+    <div class="row"><button class="btn sm ink" data-act="copybackup">Copy backup</button>
+      ${STANDALONE?'<button class="btn sm" data-act="filebackup">Save backup file</button>':''}</div>
+    ${ui.showBackup?`<label class="f">Your backup. Select it all and copy it<textarea readonly onfocus="this.select()">${esc(JSON.stringify(backupData()))}</textarea></label>`:''}
+    <label class="f">Restore from a backup<textarea id="restoreText" style="min-height:80px" placeholder="Paste a backup here">${esc(ui.restoreText||'')}</textarea></label>
+    <div class="row"><button class="btn sm" data-act="restore">${ui.armDelete==='restore'?'Tap again to restore':'Restore pasted backup'}</button>
+      <label class="btn sm ghost" style="cursor:pointer">Restore from a file<input type="file" id="restoreFile" accept="application/json,.json" hidden></label></div>
+    <p class="small muted">Restoring keeps whichever copy of each book was changed most recently.</p>
+  </details>`;
+}
+
+/* ---------- toast ---------- */
+let toastT; function toast(t){ const el=$('#toast'); el.textContent=t; el.hidden=false; clearTimeout(toastT); toastT=setTimeout(()=>el.hidden=true,2200); }
+
+/* ---------- views ---------- */
+function render(){
+  const run=curRun(), cfg=ui.bookId?bookCfg(ui.bookId):null;
+  if(['sheet','fight','journey','map'].includes(ui.view) && !run) ui.view = ui.bookId&&ui.draft ? 'new' : 'books';
+  $('#hTitle').textContent = cfg && ui.view!=='books' ? bookTitle(ui.bookId) : 'Adventure Log';
+  $('#hSub').textContent = ui.view==='books' ? 'Fighting Fantasy gamebooks' : ui.view==='new' ? 'New adventurer' : run ? `${run.name} · ${statusWord(run)}` : '';
+  $('#undoBtn').hidden = !undoStack.length || ui.view==='books';
+  $('#tabs').hidden = !run || ui.view==='new' || ui.view==='books' && !run;
+  document.querySelectorAll('#tabs [data-tab]').forEach(b=>b.setAttribute('aria-current', b.dataset.tab===ui.view?'page':'false'));
+  if(run && normInv(run)) touch(ui.bookId);
+  const app=$('#app'); const mw=$('#mapwrap'); const keep=mw?{l:mw.scrollLeft,t:mw.scrollTop}:null;
+  app.innerHTML = ({books:vBooks,new:vNew,sheet:vSheet,fight:vFight,journey:vJourney,map:vMap})[ui.view]();
+  const nw=$('#mapwrap');
+  if(nw){ if(keep && !ui.mapCenter){ nw.scrollLeft=keep.l; nw.scrollTop=keep.t; }
+    else { const c=nw.querySelector('.room.cur')||nw.querySelector('.room'); if(c){ const b=c.getBBox(); const z=ui.zoom||1;
+      nw.scrollLeft=(b.x+b.width/2)*z-nw.clientWidth/2; nw.scrollTop=(b.y+b.height/2)*z-nw.clientHeight/2; } }
+    ui.mapCenter=false; }
+  saveLocal();
+}
+const statusWord = r => r.status==='dead'?'Fallen':r.status==='won'?'Victorious':`Paragraph ${r.para||1}`;
+
+function vBooks(){
+  const cards = allBooks().map(({id,cfg,doc})=>{
+    const runs=doc?Object.values(doc.runs):[]; const act=doc?.activeRunId?doc.runs[doc.activeRunId]:null;
+    const fallen=runs.filter(r=>r.status==='dead').length, won=runs.filter(r=>r.status==='won').length;
+    return `<article class="box heavy book">
+      <div class="no" aria-hidden="true">${esc(cfg.no||'•')}</div>
+      <div class="meta">
+        <h2>${esc(bookTitle(id))}${cfg.pending?' <span aria-label="setup not yet confirmed">*</span>':''}</h2>
+        ${cfg.titles?`<div class="row" style="gap:6px">${cfg.titles.map((t,i)=>`<button class="chip" data-act="titlepick" data-id="${id}" data-i="${i}" aria-pressed="${(doc?.titleIdx||0)===i}">${esc(t)}</button>`).join('')}</div>`:''}
+        <p class="small muted">${esc(cfg.authors||'')}</p>
+        ${cfg.blurb?`<p class="small">${esc(cfg.blurb)}</p>`:''}
+        ${cfg.pending?`<p class="small muted">* ${esc(cfg.pending)}</p>`:''}
+        <div class="row small"><span class="tag">${cfg.sheet==='magic'?'Magic sheet':cfg.fear?'Fear score':'Standard sheet'}</span>
+          ${runs.length?`<span class="muted">${runs.length} adventure${runs.length>1?'s':''} · ${fallen} fallen · ${won} won</span>`:'<span class="muted">Not yet attempted</span>'}</div>
+        ${act?`<p class="small"><b>${esc(act.name)}</b> — Skill ${act.skill.cur}, Stamina ${act.stamina.cur}, Luck ${act.luck.cur} · ${statusWord(act)}</p>`:''}
+        <div class="row">
+          ${act?`<button class="btn ink" data-act="open" data-id="${id}">Continue</button>`:''}
+          <button class="btn ${act?'':'ink'}" data-act="newrun" data-id="${id}">New adventure</button>
+          ${!PRESETS[id]?`<button class="btn ghost sm" data-act="delbook" data-id="${id}">${ui.armDelete==='book:'+id?'Tap again to delete':'Remove book'}</button>`:''}
+        </div>
+      </div></article>`;}).join('');
+  return `${cards}
+  <details class="box"><summary>Add another book</summary>
+    <form id="addBook" class="list" style="gap:10px;padding-top:6px">
+      <label class="f">Title<input type="text" id="nbTitle" required placeholder="The Citadel of Chaos"></label>
+      <div class="grid2">
+        <label class="f">Book number<input type="text" id="nbNo" inputmode="numeric" placeholder="2"></label>
+        <label class="f">Sheet<select id="nbSheet"><option value="standard">Standard</option><option value="magic">Magic</option></select></label>
+        <label class="f">Starting provisions<input type="number" id="nbProv" value="10" min="0"></label>
+        <label class="f">Stamina per meal<input type="number" id="nbHeal" value="4" min="0"></label>
+        <label class="f">Starting gold<input type="number" id="nbGold" value="0" min="0"></label>
+        <label class="f">Magic roll<input type="text" id="nbMagic" value="2d6+6"></label>
+      </div>
+      <label class="f">Starting equipment (comma separated)<input type="text" id="nbEquip" value="Sword, Leather armour, Lantern, Backpack"></label>
+      <label class="row small" style="gap:8px"><input type="checkbox" id="nbPotions" checked style="width:22px;height:22px"> Choose a starting potion (Skill, Strength or Fortune)</label>
+      <button class="btn ink" type="submit">Add book</button>
+    </form></details>
+  ${vBackup()}
+  <p class="foot">* Book setup not yet confirmed against the book. You can adjust the starting kit when you create an adventurer.</p>
+  <p class="foot">Rules follow the standard Fighting Fantasy sheet: Skill 1d6+6, Stamina 2d6+12, Luck 1d6+6.</p>
+  <p class="foot">An unofficial fan-made tracker. Fighting Fantasy is a trademark of Steve Jackson and Ian Livingstone.</p>`;
+}
+
+function vNew(){
+  const cfg=bookCfg(ui.bookId), d=ui.draft;
+  const st=(k,label,f)=>`<div class="stat"><span class="name">${label}</span><span class="val">${d[k]?d[k].total:'–'}</span>
+     <span class="init">${f}</span>${d[k]?diceRow(d[k].dice,true):''}</div>`;
+  const rolled=d.skill;
+  return `<section class="box heavy">
+    <h2>Create your adventurer</h2>
+    <label class="f">Name<input type="text" id="draftName" value="${esc(d.name)}" maxlength="40" placeholder="Unnamed adventurer"></label>
+  </section>
+  ${cfg.pending?`<p class="small muted">* ${esc(cfg.pending)}</p>`:''}
+  <div class="stats ${cfg.sheet==='magic'||cfg.fear?'four':''} ${d.justRolled?'rolling':''}">
+    ${st('skill','Skill','1 die + 6')}${st('stamina','Stamina','2 dice + 12')}${st('luck','Luck','1 die + 6')}
+    ${cfg.sheet==='magic'?st('magic','Magic',esc(cfg.magicRoll||'2d6+6').replace('d6',' dice')):''}
+    ${cfg.fear?st('fear','Fear limit',esc(cfg.fear).replace('1d6','1 die')):''}
+  </div>
+  <button class="btn ${rolled?'':'ink'}" data-act="rollstats">${rolled?'Roll again':'Roll the dice'}</button>
+  ${cfg.potions?`<section class="box"><h3>Choose one potion</h3>
+    <p class="small muted">Two measures. Drink one at any time during the adventure.</p>
+    ${Object.entries(POTIONS).map(([k,p])=>`<label class="row" style="gap:10px;flex-wrap:nowrap"><input type="radio" name="potion" value="${k}" ${d.potion===k?'checked':''} style="width:22px;height:22px;flex:none"><span><b>${p.label}</b><br><span class="small muted">${p.does}</span></span></label>`).join('')}
+  </section>`:''}
+  ${cfg.choice?`<section class="box"><h3>${esc(cfg.choice.label)}</h3>
+    ${cfg.choice.options.map(o=>`<label class="row" style="gap:10px;flex-wrap:nowrap"><input type="radio" name="choice" value="${esc(o)}" ${d.choice===o?'checked':''} style="width:22px;height:22px;flex:none"><span>${esc(o)}</span></label>`).join('')}</section>`:''}
+  <section class="box"><h3>Starting kit</h3>
+    <label class="f">Equipment (comma separated)<input type="text" id="kitEquip" value="${esc(d.kit.equipment)}" placeholder="None"></label>
+    <div class="grid2"><label class="f">Provisions<input type="number" id="kitProv" min="0" value="${d.kit.provisions}"></label>
+      <label class="f">Gold Pieces<input type="number" id="kitGold" min="0" value="${d.kit.gold}"></label></div>
+    <p class="small muted">${cfg.pending?'Check these against the equipment page of your book.':'Set from the book’s equipment page.'}</p></section>
+  <div class="row"><button class="btn ghost" data-act="cancelnew">Cancel</button>
+    <button class="btn ink grow" data-act="begin" ${rolled && (!cfg.potions||d.potion) && (!cfg.choice||d.choice)?'':'disabled'}>Begin at paragraph 1</button></div>`;
+}
+
+function statBox(r,k,label){
+  const s=r[k]; const low=s.cur<=Math.max(2,Math.floor(s.init/4));
+  return `<div class="stat"><span class="name">${label}</span>
+    <span class="val ${low?'low':''}">${s.cur}</span><span class="init">Initial ${s.init}</span>
+    <div class="pm"><button data-act="stat" data-k="${k}" data-d="-1" aria-label="${label} down">−</button><button data-act="stat" data-k="${k}" data-d="1" aria-label="${label} up">+</button></div>
+    ${ui.editInit?`<div class="pm mini"><button data-act="init" data-k="${k}" data-d="-1" aria-label="Initial ${label} down">−</button><button data-act="init" data-k="${k}" data-d="1" aria-label="Initial ${label} up">+</button></div>`:''}
+  </div>`;
+}
+function fearBox(r){
+  const f=r.fear, near=f.cur>=f.max-2;
+  return `<div class="stat"><span class="name">Fear</span>
+    <span class="val ${near?'low':''}">${f.cur}</span><span class="init">Limit ${f.max}</span>
+    <div class="pm"><button data-act="fear" data-d="-1" aria-label="Fear down">\u2212</button><button data-act="fear" data-d="1" aria-label="Fear up">+</button></div></div>`;
+}
+function endBanner(r){
+  if(r.status==='dead') return `<div class="banner"><span class="verdict bad">Your adventure ends here.</span><div class="row"><button class="btn sm" data-act="revive">Undo the ending</button><button class="btn sm blood" data-act="newrun" data-id="${ui.bookId}">Start a new adventure</button></div></div>`;
+  if(r.status==='won') return `<div class="banner won"><span class="verdict good">Victory!</span><div class="row"><button class="btn sm" data-act="revive">Keep playing</button></div></div>`;
+  if(r.fear && r.fear.cur>=r.fear.max) return `<div class="banner"><span class="verdict bad">Your Fear has reached its limit.</span><p class="small">You are frightened to death, unless the book says otherwise.</p><div class="row"><button class="btn sm blood" data-act="die">Mark as fallen</button></div></div>`;
+  if(r.stamina.cur<=0) return `<div class="banner"><span class="verdict bad">Your Stamina has reached zero.</span><p class="small">You are dead, unless the book says otherwise.</p><div class="row"><button class="btn sm blood" data-act="die">Mark as fallen</button></div></div>`;
+  return '';
+}
+function vSheet(){
+  const r=curRun(), cfg=bookCfg(ui.bookId);
+  const lt=ui.luckTest;
+  return `${endBanner(r)}
+  <div class="stats ${r.magic||r.fear?'four':''}">${statBox(r,'skill','Skill')}${statBox(r,'stamina','Stamina')}${statBox(r,'luck','Luck')}${r.magic?statBox(r,'magic','Magic'):''}${r.fear?fearBox(r):''}</div>
+  ${r.choice?`<p class="small"><span class="tag">${esc((cfg.choice?.label)||'Choice')}</span> ${esc(r.choice)}</p>`:''}
+  <div class="row"><button class="btn sm ghost" data-act="toggleinit">${ui.editInit?'Done changing Initial scores':'Change Initial scores'}</button></div>
+
+  <section class="box heavy">
+    <div class="box-head"><h3>Tests &amp; dice</h3></div>
+    <div class="grid2"><button class="btn ink" data-act="testluck" ${r.luck.cur<1?'disabled':''}>Test your Luck</button><button class="btn" data-act="testskill">Test your Skill</button>
+      <button class="btn" data-act="free" data-n="1">Roll 1 die</button><button class="btn" data-act="free" data-n="2">Roll 2 dice</button></div>
+    ${lt?`<div class="row ${lt.fresh?'rolling':''}">${diceRow(lt.dice)}<div class="grow"><span class="verdict ${lt.ok?'good':'bad'}">${lt.kind==='luck'?(lt.ok?'Lucky':'Unlucky'):(lt.ok?'Success':'Failure')}</span>
+      <p class="small muted">Rolled ${sum(lt.dice)} against ${lt.kind==='luck'?'Luck':'Skill'} ${lt.vs}${lt.kind==='luck'?` · Luck is now ${r.luck.cur}`:''}</p></div></div>`:''}
+    ${ui.freeRoll?`<div class="row ${ui.freeRoll.fresh?'rolling':''}">${diceRow(ui.freeRoll.dice)}<span class="num">${sum(ui.freeRoll.dice)}</span></div>`:''}
+  </section>
+
+  ${r.potion?`<section class="box"><div class="box-head"><h3>${POTIONS[r.potion.type]?.label||r.potion.type}</h3><span class="tag">${r.potion.doses} measure${r.potion.doses===1?'':'s'} left</span></div>
+    <p class="small muted">${POTIONS[r.potion.type]?.does||''}</p>
+    <button class="btn" data-act="drink" ${r.potion.doses<1?'disabled':''}>Drink a measure</button></section>`:''}
+
+  <div class="grid2">
+    <section class="box"><h3>Provisions</h3><span class="num">${r.provisions}</span>
+      <div class="pm mini"><button data-act="prov" data-d="-1" aria-label="Provisions down">−</button><button data-act="prov" data-d="1" aria-label="Provisions up">+</button></div>
+      <button class="btn sm" data-act="eat" ${r.provisions<1?'disabled':''}>Eat (+${cfg.heal??4} Stamina)</button><span class="small muted">One meal at a time, only when a paragraph lets you rest.</span></section>
+    <section class="box"><h3>Gold Pieces</h3><span class="num">${r.gold}</span>
+      <div class="pm mini"><button data-act="gold" data-d="-1" aria-label="Gold down">−</button><button data-act="gold" data-d="1" aria-label="Gold up">+</button></div>
+      <div class="row" style="gap:6px;flex-wrap:nowrap"><input type="number" id="goldAmt" placeholder="± amount" style="min-height:38px;padding:6px"><button class="btn sm" data-act="goldadd">Add</button></div></section>
+  </div>
+
+  ${vInventory(r)}
+
+  ${r.magic||cfg.spells?`<section class="box"><h3>Magic Spells</h3><textarea id="spells" placeholder="Spells chosen and how many of each">${esc(r.spells||'')}</textarea></section>`:''}`;
+}
+
+function itemLine(e){
+  const bits=[];
+  if(e.kind==='weapon'){ bits.push(`Attack ${e.atk>=0?'+':''}${e.atk}`); bits.push(`Damage ${e.dmg}`); }
+  else if(e.atk) bits.push(`Attack ${e.atk>0?'+':''}${e.atk}`);
+  if(e.note) bits.push(e.note);
+  return bits.join(' · ');
+}
+function vInventory(r){
+  const groups=Object.keys(KINDS).map(k=>[k,r.equipment.filter(e=>e.kind===k)]).filter(([,a])=>a.length);
+  const row=e=>{ const open=ui.itemSel===e.id;
+    return `<div class="item"><button class="nm" data-act="itemopen" data-id="${e.id}" aria-expanded="${open}">${esc(e.text)}${itemLine(e)?`<small>${esc(itemLine(e))}</small>`:''}</button>
+      ${e.qty>1?`<span class="qty">×${e.qty}</span>`:''}
+      ${e.kind==='weapon'?`<button class="chip" data-act="wield" data-id="${e.id}" aria-pressed="${!!e.inHand}">${e.inHand?'In hand':'Wield'}</button>`:''}</div>
+      ${open?`<div class="edit">
+        <label class="f">Name<input type="text" id="itemText" value="${esc(e.text)}" maxlength="60"></label>
+        <div class="grid2"><label class="f">Type<select id="itemKind">${Object.entries(KIND1).map(([k,v])=>`<option value="${k}" ${e.kind===k?'selected':''}>${v}</option>`).join('')}</select></label>
+          <div class="kv"><span class="lbl">How many</span><div class="pm mini"><button data-act="itemnum" data-f="qty" data-d="-1" aria-label="Fewer">−</button></div><span class="v">${e.qty}</span><div class="pm mini"><button data-act="itemnum" data-f="qty" data-d="1" aria-label="More">+</button></div></div></div>
+        <div class="grid2">
+          <div class="kv"><span class="lbl">Attack</span><div class="pm mini"><button data-act="itemnum" data-f="atk" data-d="-1" aria-label="Attack down">−</button></div><span class="v">${e.atk>0?'+':''}${e.atk}</span><div class="pm mini"><button data-act="itemnum" data-f="atk" data-d="1" aria-label="Attack up">+</button></div></div>
+          ${e.kind==='weapon'?`<div class="kv"><span class="lbl">Damage</span><div class="pm mini"><button data-act="itemnum" data-f="dmg" data-d="-1" aria-label="Damage down">−</button></div><span class="v">${e.dmg}</span><div class="pm mini"><button data-act="itemnum" data-f="dmg" data-d="1" aria-label="Damage up">+</button></div></div>`:''}</div>
+        <label class="f">Note<input type="text" id="itemNote" value="${esc(e.note)}" maxlength="80" placeholder="${e.kind==='key'?'Number on the key':'What it does, where you found it'}"></label>
+        <p class="small muted">Attack changes your Attack Strength while ${e.kind==='weapon'?'this weapon is in hand':'you carry it'}. Damage is how much Stamina a hit takes from a monster.</p>
+        <div class="row"><button class="btn sm" data-act="itemopen" data-id="${e.id}">Done</button><button class="btn sm ghost" data-act="delequip" data-id="${e.id}">Drop it</button></div>
+      </div>`:''}`; };
+  return `<section class="box"><div class="box-head"><h3>Equipment &amp; Treasure</h3><span class="small muted">Tap an item to edit</span></div>
+    ${groups.length?groups.map(([k,a])=>`<div class="inv-group"><h4>${KINDS[k].toUpperCase()}</h4>${a.map(row).join('')}</div>`).join(''):'<p class="small muted">Nothing carried.</p>'}
+    ${!weaponInHand(r)?`<p class="small" style="color:var(--blood)">No weapon in hand. Check your book for a penalty when fighting unarmed and set it on the Fight tab.</p>`:''}
+    <form id="addEquip" class="row" style="flex-wrap:nowrap;gap:6px"><input type="text" id="equipText" placeholder="Brass key 111" class="grow" style="min-width:0">
+      <select id="equipKind" style="width:auto;flex:none" aria-label="Item type"><option value="auto">Type</option>${Object.entries(KIND1).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select>
+      <button class="btn sm ink" type="submit">Add</button></form>
+  </section>`;
+}
+
+function vFight(){
+  const r=curRun();
+  const sel=r.monsters.find(m=>m.id===ui.fightSel && (!m.down || ui.round?.mid===m.id)) || r.monsters.find(m=>!m.down);
+  const rd=ui.round && sel && ui.round.mid===sel.id ? ui.round : null;
+  const over=sel?.down;
+  let panel='';
+  if(sel){
+    panel=`<section class="box heavy">
+      <div class="vs ${rd?.fresh?'rolling':''}">
+        <div class="side"><span class="who">${esc(r.name)}</span><span class="num">${r.stamina.cur}</span><span class="small muted">Skill ${r.skill.cur}</span>${rd&&rd.p?diceRow(rd.p,true):''}${rd&&rd.ps?`<span class="small">Attack ${rd.ps}</span>`:''}</div>
+        <div class="mid">vs</div>
+        <div class="side"><span class="who">${esc(sel.name)}</span><span class="num">${sel.stamina}</span><span class="small muted">Skill ${sel.skill}</span>${rd&&rd.e?diceRow(rd.e,true):''}${rd&&rd.es?`<span class="small">Attack ${rd.es}</span>`:''}</div>
+      </div>
+      ${rd?`<p class="verdict ${rd.outcome==='hit'||rd.outcome==='won'?'good':rd.outcome==='tie'?'':'bad'}" style="text-align:center">${esc(rd.text)}</p>`:''}
+      ${rd&&rd.luckText?`<p class="small" style="text-align:center">${rd.luckText}</p>`:''}
+      <div class="weap"><span class="grow" style="flex:1;min-width:0">${(()=>{const w=weaponInHand(r); return w?`<b>${esc(w.text)}</b> <span class="muted">Attack ${w.atk>=0?'+':''}${w.atk}, Damage ${w.dmg}</span>`:'<b style="color:var(--blood)">Bare hands</b>';})()}</span>
+        ${r.equipment.filter(e=>e.kind==='weapon').length>1?`<select id="fightWeapon" style="width:auto;min-height:38px;padding:4px 8px" aria-label="Weapon in hand">${r.equipment.filter(e=>e.kind==='weapon').map(w=>`<option value="${w.id}" ${w.inHand?'selected':''}>${esc(w.text)}</option>`).join('')}</select>`:''}</div>
+      <div class="kv"><span class="lbl">Attack modifier for this fight</span><div class="row" style="gap:6px;flex-wrap:nowrap"><div class="pm mini"><button data-act="fmod" data-d="-1" aria-label="Modifier down">−</button></div><span class="v">${r.fightMod>0?'+':''}${r.fightMod}</span><div class="pm mini"><button data-act="fmod" data-d="1" aria-label="Modifier up">+</button></div></div></div>
+      <div class="kv"><span class="lbl">${esc(sel.name)} hits you for</span><div class="row" style="gap:6px;flex-wrap:nowrap"><div class="pm mini"><button data-act="mdmg" data-d="-1" aria-label="Monster damage down">−</button></div><span class="v">${sel.dmg??2}</span><div class="pm mini"><button data-act="mdmg" data-d="1" aria-label="Monster damage up">+</button></div></div></div>
+      <div class="grid2">
+        <button class="btn ink" data-act="attack" ${over||r.stamina.cur<1||r.status!=='alive'?'disabled':''}>Attack round</button>
+        ${rd && ['hit','hurt','escape'].includes(rd.outcome) && !rd.luckUsed
+          ? `<button class="btn" data-act="fightluck" ${r.luck.cur<1?'disabled':''}>Use Luck (${r.luck.cur})</button>`
+          : `<button class="btn" data-act="escape" ${over||r.stamina.cur<1?'disabled':''}>Escape (−2)</button>`}
+      </div>
+      ${over?`<p class="small muted" style="text-align:center">Pick the next monster below, or add a new encounter.</p>`:`<div class="row small"><span class="muted grow">Adjust ${esc(sel.name)}’s Stamina</span><div class="pm mini"><button data-act="mstam" data-d="-1" aria-label="Monster stamina down">−</button><button data-act="mstam" data-d="1" aria-label="Monster stamina up">+</button></div></div>`}
+      ${r.log.length?`<div class="log">${r.log.slice(-12).reverse().map(l=>`<span>${esc(l)}</span>`).join('')}</div>`:''}
+    </section>`;
+  } else {
+    panel=`<section class="box"><h3>No fight underway</h3><p class="small muted">When the book gives you a creature to fight, enter its name, Skill and Stamina below.</p></section>`;
+  }
+  return `${endBanner(r)}${panel}
+  <form id="addMon" class="box"><h3>New encounter</h3>
+    <label class="f">Monster<input type="text" id="mName" placeholder="Orc" required></label>
+    <div class="grid2"><label class="f">Skill<input type="number" id="mSkill" inputmode="numeric" min="0" required></label><label class="f">Stamina<input type="number" id="mStam" inputmode="numeric" min="1" required></label></div>
+    <button class="btn ink" type="submit">Add and fight</button></form>
+  ${r.monsters.length?`<section class="box"><div class="box-head"><h3>Monster Encounters</h3><span class="small muted">Tap to fight</span></div>
+    <div class="mgrid">${r.monsters.slice().reverse().map(m=>`<button class="mon ${sel&&m.id===sel.id?'sel':''} ${m.down?'down':''}" data-act="pick" data-id="${m.id}">
+      <b>Monster</b><span class="mn">${esc(m.name)}</span><b>Skill</b><span>${m.skill}</span><b>Stamina</b><span>${m.down?'Defeated':m.stamina+' / '+m.staminaInit}</span></button>`).join('')}</div></section>`:''}`;
+}
+
+function vJourney(){
+  const r=curRun(), doc=store.books[ui.bookId];
+  const others=Object.values(doc.runs).filter(x=>x.id!==r.id).sort((a,b)=>b.created-a.created);
+  return `${endBanner(r)}
+  <section class="box heavy"><h3>Current paragraph</h3>
+    <div class="para"><span class="big">${r.para||1}</span>
+      <form id="turnTo" class="grow" style="display:flex;gap:8px;min-width:0"><input type="number" id="turnNum" inputmode="numeric" min="1" max="999" placeholder="Turn to…" required style="min-width:0"><button class="btn ink" type="submit">Go</button></form></div>
+    <div class="row"><button class="btn sm" data-act="back" ${r.path.length<2?'disabled':''}>Back one step</button><span class="small muted">${r.path.length} paragraph${r.path.length===1?'':'s'} visited</span></div>
+    <div class="trail">${r.path.slice(-40).map(n=>`<span>${n}</span>`).join('')}</div>
+  </section>
+  <section class="box"><h3>Notes &amp; map</h3>
+    <textarea id="notes" placeholder="Clues, key numbers, which way you turned at each junction…">${esc(r.notes||'')}</textarea></section>
+  <section class="box"><h3>This adventure</h3>
+    <label class="f">Adventurer name<input type="text" id="runName" value="${esc(r.name)}" maxlength="40"></label>
+    <div class="row">${r.status==='alive'?`<button class="btn" data-act="win">Mark as won</button><button class="btn blood" data-act="die">Mark as fallen</button>`:`<button class="btn" data-act="revive">Reopen</button>`}
+      <button class="btn ghost" data-act="delrun">${ui.armDelete==='run:'+r.id?'Tap again to delete':'Delete adventure'}</button></div></section>
+  ${others.length?`<section class="box"><h3>Earlier adventures</h3><div class="list">${others.map(o=>`<div class="it"><span><b>${esc(o.name)}</b> <span class="small muted">· ${new Date(o.created).toLocaleDateString()} · reached ${o.para}</span></span>
+    <span class="tag ${o.status}" style="flex:none">${o.status==='dead'?'Fallen':o.status==='won'?'Won':'Alive'}</span><button class="btn sm" data-act="switch" data-id="${o.id}">Open</button></div>`).join('')}</div></section>`:''}`;
+}
+
+/* ---------- dungeon map ---------- */
+const CW=108, CH=92, RW=82, RH=62;
+const DIRS={n:[0,-1,'North'],e:[1,0,'East'],s:[0,1,'South'],w:[-1,0,'West']};
+const LINKS=['passage','door','locked'];
+const LINKNAME={passage:'Passage',door:'Door',locked:'Locked door'};
+const TAGS={fight:'Fight',treasure:'Treasure',trap:'Trap',stairs:'Stairs',item:'Item'};
+const curMap = () => { const d=store.books[ui.bookId]; if(!d?.maps?.length) return null; return d.maps.find(m=>m.id===d.activeMapId)||d.maps[0]; };
+const roomAt = (m,x,y) => m.rooms.find(r=>r.x===x&&r.y===y);
+const linkOf = (m,a,b) => m.links.find(l=>(l.a===a&&l.b===b)||(l.a===b&&l.b===a));
+function newMap(doc,name,para){ const room={id:uid(),x:0,y:0,para:para||'',name:'Entrance',notes:'',tags:[]};
+  const m={id:uid(),name,rooms:[room],links:[],cur:room.id}; (doc.maps ||= []).push(m); doc.activeMapId=m.id; return m; }
+
+function vMap(){
+  const m=curMap(), r=curRun(), doc=store.books[ui.bookId];
+  if(!m) return `<section class="box heavy"><h2>Dungeon map</h2>
+    <p>Draw the dungeon as you go. Each room is a box labelled with its paragraph number, joined by passages and doors.</p>
+    <p class="small muted">The map belongs to the book, not the adventurer, so it carries over to your next attempt.</p>
+    <button class="btn ink" data-act="mapstart">Start the map at paragraph ${r.para||1}</button></section>`;
+  const sel=m.rooms.find(x=>x.id===ui.mapSel);
+  const xs=m.rooms.map(x=>x.x), ys=m.rooms.map(x=>x.y);
+  const minX=Math.min(...xs)-1, maxX=Math.max(...xs)+1, minY=Math.min(...ys)-1, maxY=Math.max(...ys)+1;
+  const W=(maxX-minX+1)*CW, H=(maxY-minY+1)*CH, z=ui.zoom||1;
+  const cx=x=>(x-minX)*CW+CW/2, cy=y=>(y-minY)*CH+CH/2;
+  const byId=Object.fromEntries(m.rooms.map(x=>[x.id,x]));
+  let links='', doors='';
+  m.links.forEach(l=>{ const a=byId[l.a], b=byId[l.b]; if(!a||!b) return;
+    const x1=cx(a.x),y1=cy(a.y),x2=cx(b.x),y2=cy(b.y);
+    links+=`<line class="corr" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/><line class="corr-in" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`;
+    if(l.type!=='passage'){ const mx=(x1+x2)/2,my=(y1+y2)/2, horiz=Math.abs(x2-x1)>=Math.abs(y2-y1);
+      doors+= horiz?`<rect class="door ${l.type}" x="${mx-4}" y="${my-9}" width="8" height="18"/>`:`<rect class="door ${l.type}" x="${mx-9}" y="${my-4}" width="18" height="8"/>`; } });
+  const rooms=m.rooms.map(o=>{ const x=cx(o.x)-RW/2, y=cy(o.y)-RH/2, isCur=o.id===m.cur, isSel=sel&&o.id===sel.id;
+    const nm=(o.name||'').length>13?o.name.slice(0,12)+'…':(o.name||'');
+    const tg=(o.tags||[]).map(t=>TAGS[t]?.[0]).join(' ');
+    return `<g class="room ${isCur?'cur':''} ${isSel?'sel':''}" data-act="mapsel" data-id="${o.id}" role="button" aria-label="Paragraph ${esc(o.para)} ${esc(o.name)}">
+      ${isSel||isCur?`<rect class="shadow" x="${x+4}" y="${y+4}" width="${RW}" height="${RH}" rx="2"/>`:''}
+      <rect class="body" x="${x}" y="${y}" width="${RW}" height="${RH}" rx="2"/>
+      <text class="pno" x="${x+RW/2}" y="${y+27}" text-anchor="middle">${esc(o.para||'?')}</text>
+      <text class="rname" x="${x+RW/2}" y="${y+43}" text-anchor="middle">${esc(nm)}</text>
+      ${tg?`<text class="rtag" x="${x+RW-5}" y="${y+RH-5}" text-anchor="end">${esc(tg)}</text>`:''}
+      ${isCur?`<text class="here" x="${x+5}" y="${y+11}">YOU</text>`:''}
+    </g>`; }).join('');
+  let extras='';
+  if(sel){ Object.entries(DIRS).forEach(([k,[dx,dy,label]])=>{ const nx=sel.x+dx, ny=sel.y+dy, nb=roomAt(m,nx,ny);
+    if(!nb){ extras+=`<g class="ghost" data-act="mapadd" data-dir="${k}" role="button" aria-label="Add room to the ${label}">
+      <rect x="${cx(nx)-RW/2}" y="${cy(ny)-RH/2}" width="${RW}" height="${RH}" rx="2"/><text x="${cx(nx)}" y="${cy(ny)+9}" text-anchor="middle">+</text></g>`; }
+    else { const l=linkOf(m,sel.id,nb.id), mx=(cx(sel.x)+cx(nx))/2, my=(cy(sel.y)+cy(ny))/2;
+      extras+=`<g class="hot" data-act="maplink" data-dir="${k}" role="button" aria-label="Change the way ${label}"><circle cx="${mx}" cy="${my}" r="13"/>
+        <text x="${mx}" y="${my+3.5}" text-anchor="middle">${l?{passage:'P',door:'D',locked:'L'}[l.type]:'×'}</text></g>`; } }); }
+  const maps=doc.maps;
+  return `<div class="maps">${maps.map(x=>`<button class="chip" data-act="mappick" data-id="${x.id}" aria-pressed="${x.id===m.id}">${esc(x.name)}</button>`).join('')}
+    <button class="chip" data-act="mapnew">+ New map</button></div>
+  <div class="mapwrap" id="mapwrap" style="--cw:${CW*z};--ch:${CH*z}">
+    <svg width="${W*z}" height="${H*z}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">${links}${doors}${extras}${rooms}</svg></div>
+  <div class="row"><span class="legend grow"><span><svg width="26" height="12"><line x1="2" y1="6" x2="24" y2="6" stroke="currentColor" stroke-width="6"/></svg> Passage</span>
+      <span><svg width="14" height="18"><rect x="3" y="1" width="8" height="16" fill="none" stroke="currentColor" stroke-width="2"/></svg> Door</span>
+      <span><svg width="14" height="18"><rect x="3" y="1" width="8" height="16" fill="var(--blood)"/></svg> Locked</span></span>
+    <div class="pm mini"><button data-act="zoom" data-d="-1" aria-label="Zoom out">−</button><button data-act="zoom" data-d="1" aria-label="Zoom in">+</button></div></div>
+  ${sel?`<section class="box heavy">
+    <div class="box-head"><h3>Room at paragraph ${esc(sel.para||'?')}</h3>${sel.id===m.cur?'<span class="tag">You are here</span>':`<button class="btn sm" data-act="maphere">I’m here</button>`}</div>
+    <div class="grid2"><label class="f">Paragraph<input type="number" id="roomPara" inputmode="numeric" value="${esc(sel.para)}"></label>
+      <label class="f">Name<input type="text" id="roomName" value="${esc(sel.name)}" maxlength="40" placeholder="Guard room"></label></div>
+    <div class="tags">${Object.entries(TAGS).map(([k,v])=>`<button class="chip" data-act="maptag" data-k="${k}" aria-pressed="${(sel.tags||[]).includes(k)}">${v}</button>`).join('')}</div>
+    <label class="f">Notes<textarea id="roomNotes" style="min-height:90px" placeholder="What you found, which exits you haven’t tried…">${esc(sel.notes||'')}</textarea></label>
+    <div class="row"><span class="small muted grow">Move room</span>
+      <div class="pm mini"><button data-act="mapmove" data-dir="w" aria-label="Move west">←</button><button data-act="mapmove" data-dir="n" aria-label="Move north">↑</button><button data-act="mapmove" data-dir="s" aria-label="Move south">↓</button><button data-act="mapmove" data-dir="e" aria-label="Move east">→</button></div></div>
+    <div class="row"><button class="btn sm ghost" data-act="mapdesel">Done</button><button class="btn sm ghost" data-act="mapdel">${ui.armDelete==='room:'+sel.id?'Tap again to delete':'Delete room'}</button></div>
+    <p class="small muted">Tap a dashed + to add a room in that direction. Tap a red circle between rooms to switch passage, door, locked door or no way through.</p>
+  </section>`:`<p class="small muted">Tap a room to edit it or add rooms next to it. Rooms whose paragraph you turn to on the Journey tab become your current room.</p>`}
+  <details class="box"><summary>Map settings</summary>
+    <label class="f" style="margin-top:8px">Map name<input type="text" id="mapName" value="${esc(m.name)}" maxlength="30"></label>
+    <button class="btn sm ghost" data-act="mapdelmap" ${maps.length<2?'disabled':''}>${ui.armDelete==='map:'+m.id?'Tap again to delete this map':'Delete this map'}</button></details>`;
+}
+
+/* ---------- actions ---------- */
+function newRun(id){
+  const cfg=bookCfg(id); ui.bookId=id;
+  ui.draft={name:'',skill:null,stamina:null,luck:null,magic:null,fear:null,potion:null,choice:null,kit:{equipment:(cfg.equipment||[]).join(', '),provisions:+cfg.provisions||0,gold:+cfg.gold||0}};
+  ui.view='new'; undoStack.length=0; render(); window.scrollTo(0,0);
+}
+function capAdd(s,d){ s.cur=Math.max(0,Math.min(s.init,s.cur+d)); }
+function log(r,t){ r.log.push(t); if(r.log.length>60) r.log.splice(0,r.log.length-60); }
+
+document.addEventListener('click',e=>{
+  const t=e.target.closest('[data-act],[data-tab]'); if(!t) return;
+  if(t.dataset.tab){ const tab=t.dataset.tab; ui.view=tab; ui.armDelete=null; if(tab==='map') ui.mapCenter=true; render(); window.scrollTo(0,0); return; }
+  const a=t.dataset.act, r=curRun(), cfg=ui.bookId?bookCfg(ui.bookId):null;
+  if(!['delbook','delrun','mapdel','mapdelmap','restore'].includes(a)) ui.armDelete=null;
+  switch(a){
+    case 'open': ui.bookId=t.dataset.id; ui.view='sheet'; undoStack.length=0; render(); window.scrollTo(0,0); break;
+    case 'newrun': newRun(t.dataset.id); break;
+    case 'cancelnew': ui.draft=null; ui.view=curRun()?'sheet':'books'; render(); break;
+    case 'rollstats':{ const d=ui.draft;
+      d.skill=rollFormula('1d6+6'); d.stamina=rollFormula('2d6+12'); d.luck=rollFormula('1d6+6');
+      d.magic = cfg.sheet==='magic' ? (rollFormula(cfg.magicRoll||'2d6+6')||rollFormula('2d6+6')) : null;
+      d.fear = cfg.fear ? (rollFormula(cfg.fear)||rollFormula('1d6+6')) : null;
+      d.justRolled=true; render(); d.justRolled=false; break; }
+    case 'begin':{ const d=ui.draft; const id=ui.bookId; const runId=uid();
+      const run={id:runId,name:d.name.trim()||'Unnamed adventurer',created:Date.now(),status:'alive',
+        skill:{init:d.skill.total,cur:d.skill.total},stamina:{init:d.stamina.total,cur:d.stamina.total},luck:{init:d.luck.total,cur:d.luck.total},
+        magic:d.magic?{init:d.magic.total,cur:d.magic.total}:null,fear:d.fear?{max:d.fear.total,cur:0}:null,choice:d.choice||'',spells:'',
+        gold:Math.max(0,+d.kit.gold||0),provisions:Math.max(0,+d.kit.provisions||0),
+        equipment:String(d.kit.equipment||'').split(',').map(x=>x.trim()).filter(Boolean).map(x=>makeItem(x)),fightMod:0,potion:d.potion?{type:d.potion,doses:2}:null,
+        para:1,path:[1],notes:'',monsters:[],log:[]};
+      const doc=bookDoc(id); doc.runs[runId]=run; doc.activeRunId=runId; if(!PRESETS[id]) doc.config=doc.config||cfg;
+      ui.draft=null; ui.view='sheet'; ui.round=null; ui.luckTest=null; ui.freeRoll=null; touch(id); render(); window.scrollTo(0,0); toast('Turn to paragraph 1'); break; }
+    case 'undo':{ const u=undoStack.pop(); if(!u) break; if(u.doc) store.books[u.id]=u.doc; else delete store.books[u.id]; ui.round=null; touch(u.id); render(); toast('Undone'); break; }
+    case 'toggleinit': ui.editInit=!ui.editInit; render(); break;
+    case 'fear': mutate(()=>{ r.fear.cur=Math.max(0,r.fear.cur+(+t.dataset.d)); }); break;
+    case 'titlepick':{ const id=t.dataset.id; bookDoc(id).titleIdx=+t.dataset.i; touch(id); render(); break; }
+    case 'copybackup':{ const txt=JSON.stringify(backupData());
+      const done=()=>toast('Backup copied. Paste it into a note or the Restore box.');
+      try{ navigator.clipboard.writeText(txt).then(done,()=>{ ui.showBackup=true; render(); }); }catch(_){ ui.showBackup=true; render(); } break; }
+    case 'filebackup':{ const blob=new Blob([JSON.stringify(backupData(),null,1)],{type:'application/json'});
+      const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`adventure-log-backup-${new Date().toISOString().slice(0,10)}.json`;
+      document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },500); break; }
+    case 'restore':{ const txt=$('#restoreText')?.value||''; restoreFrom(txt); break; }
+    case 'stat': mutate(()=>{ const s=r[t.dataset.k]; capAdd(s,+t.dataset.d); }); break;
+    case 'init': mutate(()=>{ const s=r[t.dataset.k]; s.init=Math.max(0,s.init+(+t.dataset.d)); if(+t.dataset.d>0) s.cur++; s.cur=Math.min(s.cur,s.init); }); break;
+    case 'testluck': mutate(()=>{ const dice=[d6(),d6()], vs=r.luck.cur, ok=sum(dice)<=vs; r.luck.cur=Math.max(0,r.luck.cur-1);
+      ui.luckTest={kind:'luck',dice,vs,ok,fresh:true}; ui.freeRoll=null; }); ui.luckTest.fresh=false; break;
+    case 'testskill':{ const dice=[d6(),d6()]; ui.luckTest={kind:'skill',dice,vs:r.skill.cur,ok:sum(dice)<=r.skill.cur,fresh:true}; ui.freeRoll=null; render(); ui.luckTest.fresh=false; break; }
+    case 'free': ui.freeRoll={dice:Array.from({length:+t.dataset.n},d6),fresh:true}; ui.luckTest=null; render(); ui.freeRoll.fresh=false; break;
+    case 'drink': mutate(()=>{ const p=r.potion; p.doses--; if(p.type==='Skill') r.skill.cur=r.skill.init;
+      else if(p.type==='Strength') r.stamina.cur=r.stamina.init; else { r.luck.init++; r.luck.cur=r.luck.init; } }); toast(`Drank the ${POTIONS[r.potion.type].label}`); break;
+    case 'eat': mutate(()=>{ r.provisions--; capAdd(r.stamina,cfg.heal??4); }); toast(`Stamina now ${r.stamina.cur}`); break;
+    case 'prov': mutate(()=>{ r.provisions=Math.max(0,r.provisions+(+t.dataset.d)); }); break;
+    case 'gold': mutate(()=>{ r.gold=Math.max(0,r.gold+(+t.dataset.d)); }); break;
+    case 'goldadd':{ const v=parseInt($('#goldAmt').value,10); if(!v) break; mutate(()=>{ r.gold=Math.max(0,r.gold+v); }); break; }
+    case 'delequip': mutate(()=>{ r.equipment=r.equipment.filter(x=>x.id!==t.dataset.id); ui.itemSel=null; }); break;
+    case 'itemopen': ui.itemSel = ui.itemSel===t.dataset.id ? null : t.dataset.id; render(); break;
+    case 'wield': mutate(()=>{ const it=r.equipment.find(x=>x.id===t.dataset.id); const was=it.inHand; r.equipment.forEach(x=>{ if(x.kind==='weapon') x.inHand=false; }); it.inHand=!was; }); break;
+    case 'itemnum': mutate(()=>{ const it=r.equipment.find(x=>x.id===ui.itemSel); const f=t.dataset.f; const v=(it[f]||0)+(+t.dataset.d);
+      it[f]= f==='qty'?Math.max(1,v) : f==='dmg'?Math.max(0,v) : v; }); break;
+    case 'fmod': mutate(()=>{ r.fightMod=(r.fightMod||0)+(+t.dataset.d); }); break;
+    case 'mdmg':{ const m=r.monsters.find(x=>x.id===ui.fightSel&&!x.down)||r.monsters.find(x=>!x.down); if(!m) break; mutate(()=>{ m.dmg=Math.max(0,(m.dmg??2)+(+t.dataset.d)); }); break; }
+    case 'pick': ui.fightSel=t.dataset.id; ui.round=null; render(); break;
+    case 'attack':{ const m=r.monsters.find(x=>x.id===ui.fightSel&&!x.down)||r.monsters.find(x=>!x.down); if(!m) break;
+      mutate(()=>{ const w=weaponInHand(r), mod=(w?.atk||0)+(r.fightMod||0)+r.equipment.filter(e=>e.kind!=='weapon').reduce((a,e)=>a+(e.atk||0),0), dmg=w?.dmg??2, mdmg=m.dmg??2;
+        const p=[d6(),d6()], en=[d6(),d6()], ps=sum(p)+r.skill.cur+mod, es=sum(en)+m.skill; let outcome,text;
+        if(ps>es){ m.stamina=Math.max(0,m.stamina-dmg); outcome='hit'; text=`You wound the ${m.name} (−${dmg})`; }
+        else if(es>ps){ r.stamina.cur=Math.max(0,r.stamina.cur-mdmg); outcome='hurt'; text=`The ${m.name} wounds you (−${mdmg})`; }
+        else { outcome='tie'; text='You both miss'; }
+        if(m.stamina<=0){ m.down=true; text=`The ${m.name} is defeated`; }
+        log(r,`${m.name}: ${ps} v ${es}${mod?` (incl. ${mod>0?'+':''}${mod})`:''} — ${text}`);
+        ui.fightSel=m.id; ui.round={mid:m.id,p,e:en,ps,es,outcome:m.down?'won':outcome,text,fresh:true}; });
+      ui.round.fresh=false; break; }
+    case 'escape':{ const m=r.monsters.find(x=>x.id===ui.fightSel&&!x.down)||r.monsters.find(x=>!x.down); if(!m) break;
+      mutate(()=>{ r.stamina.cur=Math.max(0,r.stamina.cur-2); m.down=true; m.fled=true; log(r,`Escaped from the ${m.name} — lost 2 Stamina`);
+        ui.round={mid:m.id,outcome:'escape',text:'You escape, losing 2 Stamina'}; }); break; }
+    case 'fightluck':{ const rd=ui.round; if(!rd) break; const m=r.monsters.find(x=>x.id===rd.mid);
+      mutate(()=>{ const dice=[d6(),d6()], lucky=sum(dice)<=r.luck.cur; r.luck.cur=Math.max(0,r.luck.cur-1); let lt;
+        if(rd.outcome==='hit'){ if(lucky){ m.stamina=Math.max(0,m.stamina-2); lt=`Lucky (${sum(dice)}) — a severe wound, 2 more damage`; } else { m.stamina=Math.min(m.staminaInit,m.stamina+1); lt=`Unlucky (${sum(dice)}) — only a graze, 1 damage restored`; }
+          if(m.stamina<=0) m.down=true; }
+        else { if(lucky){ capAdd(r.stamina,1); lt=`Lucky (${sum(dice)}) — only a graze, you regain 1 Stamina`; } else { r.stamina.cur=Math.max(0,r.stamina.cur-1); lt=`Unlucky (${sum(dice)}) — a serious blow, 1 more damage`; } }
+        rd.luckUsed=true; rd.luckText=lt; log(r,lt);
+        if(rd.outcome==='escape'){ ui.round=null; toast(lt); } });
+      if(ui.round) ui.round.fresh=false; break; }
+    case 'mstam':{ const m=r.monsters.find(x=>x.id===ui.fightSel&&!x.down)||r.monsters.find(x=>!x.down); if(!m) break;
+      mutate(()=>{ m.stamina=Math.max(0,m.stamina+(+t.dataset.d)); if(m.stamina<=0) m.down=true; }); break; }
+    case 'mapstart': mutate(()=>{ const m=newMap(bookDoc(ui.bookId),'Map 1',r.para||1); ui.mapSel=m.rooms[0].id; }); ui.mapCenter=true; render(); break;
+    case 'mapnew': mutate(()=>{ const doc=bookDoc(ui.bookId); const m=newMap(doc,'Map '+(doc.maps.length+1),r.para||1); ui.mapSel=m.rooms[0].id; }); ui.mapCenter=true; render(); break;
+    case 'mappick': mutate(()=>{ store.books[ui.bookId].activeMapId=t.dataset.id; },{undo:false}); ui.mapSel=null; ui.mapCenter=true; render(); break;
+    case 'mapsel': ui.mapSel = ui.mapSel===t.dataset.id ? null : t.dataset.id; render(); break;
+    case 'mapdesel': ui.mapSel=null; render(); break;
+    case 'zoom': ui.zoom=Math.max(.5,Math.min(1.6,(ui.zoom||1)+(+t.dataset.d)*.2)); render(); break;
+    case 'mapadd':{ const m=curMap(), sel=m.rooms.find(x=>x.id===ui.mapSel); if(!sel) break; const [dx,dy]=DIRS[t.dataset.dir];
+      const used=new Set(m.rooms.map(x=>String(x.para))); const p=used.has(String(r.para))?'':(r.para||'');
+      mutate(()=>{ const nr={id:uid(),x:sel.x+dx,y:sel.y+dy,para:p,name:'',notes:'',tags:[]}; m.rooms.push(nr); m.links.push({a:sel.id,b:nr.id,type:'passage'}); ui.mapSel=nr.id; });
+      setTimeout(()=>$('#roomPara')?.focus({preventScroll:true}),0); break; }
+    case 'maplink':{ const m=curMap(), sel=m.rooms.find(x=>x.id===ui.mapSel); if(!sel) break; const [dx,dy]=DIRS[t.dataset.dir]; const nb=roomAt(m,sel.x+dx,sel.y+dy); if(!nb) break;
+      mutate(()=>{ const l=linkOf(m,sel.id,nb.id); if(!l) m.links.push({a:sel.id,b:nb.id,type:'passage'});
+        else { const i=LINKS.indexOf(l.type); if(i===LINKS.length-1) m.links.splice(m.links.indexOf(l),1); else l.type=LINKS[i+1]; } });
+      const l=linkOf(curMap(),sel.id,nb.id); toast(l?LINKNAME[l.type]:'No way through'); break; }
+    case 'maphere': mutate(()=>{ curMap().cur=ui.mapSel; }); break;
+    case 'maptag': mutate(()=>{ const o=curMap().rooms.find(x=>x.id===ui.mapSel); const k=t.dataset.k; o.tags=o.tags||[]; o.tags=o.tags.includes(k)?o.tags.filter(x=>x!==k):[...o.tags,k]; }); break;
+    case 'mapmove':{ const m=curMap(), o=m.rooms.find(x=>x.id===ui.mapSel); if(!o) break; const [dx,dy]=DIRS[t.dataset.dir];
+      if(roomAt(m,o.x+dx,o.y+dy)){ toast('Another room is in the way'); break; } mutate(()=>{ o.x+=dx; o.y+=dy; }); break; }
+    case 'mapdel':{ const m=curMap(), id=ui.mapSel; if(ui.armDelete!=='room:'+id){ ui.armDelete='room:'+id; render(); break; }
+      ui.armDelete=null; if(m.rooms.length<2){ toast('A map needs at least one room'); render(); break; }
+      mutate(()=>{ m.rooms=m.rooms.filter(x=>x.id!==id); m.links=m.links.filter(l=>l.a!==id&&l.b!==id); if(m.cur===id) m.cur=m.rooms[0].id; ui.mapSel=null; }); break; }
+    case 'mapdelmap':{ const m=curMap(); if(ui.armDelete!=='map:'+m.id){ ui.armDelete='map:'+m.id; render(); break; }
+      ui.armDelete=null; mutate(()=>{ const doc=store.books[ui.bookId]; doc.maps=doc.maps.filter(x=>x.id!==m.id); doc.activeMapId=doc.maps[0]?.id; ui.mapSel=null; }); ui.mapCenter=true; render(); break; }
+    case 'back': mutate(()=>{ r.path.pop(); r.para=r.path[r.path.length-1]||1; }); break;
+    case 'win': mutate(()=>{ r.status='won'; }); break;
+    case 'die': mutate(()=>{ r.status='dead'; }); break;
+    case 'revive': mutate(()=>{ r.status='alive'; }); break;
+    case 'switch': mutate(()=>{ store.books[ui.bookId].activeRunId=t.dataset.id; }); ui.view='sheet'; ui.round=null; render(); window.scrollTo(0,0); break;
+    case 'delrun':{ if(ui.armDelete!=='run:'+r.id){ ui.armDelete='run:'+r.id; render(); break; }
+      ui.armDelete=null; mutate(()=>{ const doc=store.books[ui.bookId]; delete doc.runs[r.id];
+        const rest=Object.values(doc.runs).sort((a,b)=>b.created-a.created); doc.activeRunId=rest[0]?.id||null; });
+      if(!curRun()){ ui.view='books'; render(); } toast('Adventure deleted — Undo is at the top'); break; }
+    case 'delbook':{ const id=t.dataset.id; if(ui.armDelete!=='book:'+id){ ui.armDelete='book:'+id; render(); break; }
+      ui.armDelete=null; delete store.books[id]; dirty.add(id); if(ui.bookId===id) ui.bookId=null; saveLocal(); clearTimeout(saveTimer); saveTimer=setTimeout(flush,300); render(); break; }
+  }
+});
+
+document.addEventListener('submit',e=>{
+  e.preventDefault(); const f=e.target, r=curRun();
+  if(f.id==='addEquip'){ const v=$('#equipText').value.trim(); if(!v) return; const k=$('#equipKind').value; mutate(()=>{ const it=makeItem(v,k); if(it.kind==='weapon'&&!weaponInHand(r)) it.inHand=true; r.equipment.push(it); }); $('#equipText')?.focus(); }
+  if(f.id==='addMon'){ const name=$('#mName').value.trim(), sk=parseInt($('#mSkill').value,10), st=parseInt($('#mStam').value,10);
+    if(!name||isNaN(sk)||!(st>0)) return; const id=uid();
+    mutate(()=>{ r.monsters.push({id,name,skill:sk,stamina:st,staminaInit:st,dmg:2,down:false}); r.fightMod=0; }); ui.fightSel=id; ui.round=null; render(); window.scrollTo(0,0); }
+  if(f.id==='turnTo'){ const n=parseInt($('#turnNum').value,10); if(!(n>0)) return;
+    mutate(()=>{ r.para=n; r.path.push(n); if(r.path.length>2000) r.path.shift(); const m=curMap(); const hit=m?.rooms.find(x=>String(x.para)===String(n)); if(hit) m.cur=hit.id; }); toast(`Turn to ${n}`); }
+  if(f.id==='addBook'){ const title=$('#nbTitle').value.trim(); if(!title) return; const id='b'+uid();
+    const sheet=$('#nbSheet').value;
+    const cfg={id,no:$('#nbNo').value.trim(),title,authors:'',sheet,equipment:$('#nbEquip').value.split(',').map(s=>s.trim()).filter(Boolean),
+      provisions:Math.max(0,parseInt($('#nbProv').value,10)||0),heal:Math.max(0,parseInt($('#nbHeal').value,10)||0),gold:Math.max(0,parseInt($('#nbGold').value,10)||0),
+      potions:$('#nbPotions').checked,magicRoll:sheet==='magic'?($('#nbMagic').value.trim()||'2d6+6'):''};
+    store.books[id]={config:cfg,runs:{},activeRunId:null,updatedAt:Date.now()}; touch(id); render(); toast(`Added ${title}`); }
+});
+
+let typeT;
+document.addEventListener('input',e=>{
+  const el=e.target, r=curRun();
+  if(el.id==='draftName' && ui.draft){ ui.draft.name=el.value; return; }
+  if(el.name==='potion' && ui.draft){ ui.draft.potion=el.value; render(); return; }
+  if(el.id==='restoreText'){ ui.restoreText=el.value; if(ui.armDelete==='restore'){ ui.armDelete=null; render(); } return; }
+  if(el.name==='choice' && ui.draft){ ui.draft.choice=el.value; render(); return; }
+  if(ui.draft && ['kitEquip','kitProv','kitGold'].includes(el.id)){ ui.draft.kit[{kitEquip:'equipment',kitProv:'provisions',kitGold:'gold'}[el.id]]=el.value; return; }
+  if(!r) return;
+  const room = ui.view==='map' && curMap()?.rooms.find(x=>x.id===ui.mapSel);
+  const rf={roomPara:'para',roomName:'name',roomNotes:'notes'}[el.id];
+  if(room && rf){ room[rf]=el.value; clearTimeout(typeT); typeT=setTimeout(()=>{ touch(ui.bookId); if(rf!=='notes'){ const a=document.activeElement?.id, ss=document.activeElement?.selectionStart; render(); const e2=a&&document.getElementById(a); if(e2){ e2.focus({preventScroll:true}); try{e2.setSelectionRange(ss,ss);}catch(_){} } } },600); return; }
+  const it = ui.itemSel && r.equipment.find(x=>x.id===ui.itemSel);
+  if(it && (el.id==='itemText'||el.id==='itemNote')){ it[el.id==='itemText'?'text':'note']=el.value; clearTimeout(typeT); typeT=setTimeout(()=>touch(ui.bookId),600); return; }
+  if(it && el.id==='itemKind'){ mutate(()=>{ it.kind=el.value; if(it.kind!=='weapon') it.inHand=false; else if(!weaponInHand(r)) it.inHand=true; }); return; }
+  if(el.id==='fightWeapon'){ mutate(()=>{ r.equipment.forEach(x=>{ if(x.kind==='weapon') x.inHand=x.id===el.value; }); }); return; }
+  if(el.id==='mapName' && curMap()){ curMap().name=el.value||'Map'; clearTimeout(typeT); typeT=setTimeout(()=>touch(ui.bookId),600); return; }
+  const field={notes:'notes',spells:'spells',runName:'name'}[el.id]; if(!field) return;
+  r[field]=field==='name'?(el.value.trim()?el.value:r.name):el.value;
+  clearTimeout(typeT); typeT=setTimeout(()=>{ touch(ui.bookId); if(field==='name') $('#hSub').textContent=`${r.name} · ${statusWord(r)}`; },500);
+});
+
+document.addEventListener('change',e=>{ const el=e.target; if(el.id==='restoreFile' && el.files?.[0]){ const fr=new FileReader(); fr.onload=()=>restoreFrom(String(fr.result),true); fr.readAsText(el.files[0]); el.value=''; } });
+render();
+connect();
+</script>
+<script>
+if('serviceWorker' in navigator){ window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{})); }
+try{ navigator.storage && navigator.storage.persist && navigator.storage.persist(); }catch(e){}
+</script>
+</body>
+</html>
