@@ -169,6 +169,17 @@ nav.tabs button[aria-current="page"]{opacity:1;box-shadow:inset 0 3px 0 var(--bl
 .mapwrap{overflow:auto;border:2.5px solid var(--ink);border-radius:3px;max-height:60vh;min-height:260px;
   background-color:var(--panel);background-image:radial-gradient(var(--wash) 1.4px,transparent 1.5px);background-size:calc(var(--cw)*1px) calc(var(--ch)*1px);background-position:calc(var(--cw)*.5px) calc(var(--ch)*.5px)}
 .mapwrap svg{display:block}
+.mapframe{position:relative}
+.compass{position:absolute;top:8px;right:8px;pointer-events:none;background:color-mix(in srgb,var(--panel) 82%,transparent);border-radius:50%}
+.compass .c-ring{fill:none;stroke:var(--ink);stroke-width:2}
+.compass .c-ring.thin{stroke-width:.8;stroke-dasharray:2 2}
+.compass .c-star{fill:var(--panel);stroke:var(--ink);stroke-width:1.6;stroke-linejoin:round}
+.compass .c-shade{fill:var(--ink)}
+.compass .c-north{fill:var(--blood)}
+.compass .c-hub{fill:var(--panel);stroke:var(--ink);stroke-width:1.5}
+.compass text{font-family:var(--label);font-weight:700;text-anchor:middle;fill:var(--ink);font-size:14px}
+.compass .c-n{fill:var(--blood);font-size:17px}
+.mapwrap .ghost .gdir{font-family:var(--label);font-size:9px;font-weight:700;letter-spacing:.08em;fill:var(--ink-2)}
 .mapwrap .room rect.body{fill:var(--panel);stroke:var(--ink);stroke-width:2.5}
 .mapwrap .room.cur rect.body{stroke:var(--blood);stroke-width:4}
 .mapwrap .room .shadow{fill:var(--ink)}
@@ -654,15 +665,25 @@ function vMap(){
   let extras='';
   if(sel){ Object.entries(DIRS).forEach(([k,[dx,dy,label]])=>{ const nx=sel.x+dx, ny=sel.y+dy, nb=roomAt(m,nx,ny);
     if(!nb){ extras+=`<g class="ghost" data-act="mapadd" data-dir="${k}" role="button" aria-label="Add room to the ${label}">
-      <rect x="${cx(nx)-RW/2}" y="${cy(ny)-RH/2}" width="${RW}" height="${RH}" rx="2"/><text x="${cx(nx)}" y="${cy(ny)+9}" text-anchor="middle">+</text></g>`; }
+      <rect x="${cx(nx)-RW/2}" y="${cy(ny)-RH/2}" width="${RW}" height="${RH}" rx="2"/><text x="${cx(nx)}" y="${cy(ny)+5}" text-anchor="middle">+</text><text class="gdir" x="${cx(nx)}" y="${cy(ny)+22}" text-anchor="middle">${label}</text></g>`; }
     else { const l=linkOf(m,sel.id,nb.id), mx=(cx(sel.x)+cx(nx))/2, my=(cy(sel.y)+cy(ny))/2;
       extras+=`<g class="hot" data-act="maplink" data-dir="${k}" role="button" aria-label="Change the way ${label}"><circle cx="${mx}" cy="${my}" r="13"/>
         <text x="${mx}" y="${my+3.5}" text-anchor="middle">${l?{passage:'P',door:'D',locked:'L'}[l.type]:'×'}</text></g>`; } }); }
   const maps=doc.maps;
   return `<div class="maps">${maps.map(x=>`<button class="chip" data-act="mappick" data-id="${x.id}" aria-pressed="${x.id===m.id}">${esc(x.name)}</button>`).join('')}
     <button class="chip" data-act="mapnew">+ New map</button></div>
+  <div class="mapframe">
   <div class="mapwrap" id="mapwrap" style="--cw:${CW*z};--ch:${CH*z}">
     <svg width="${W*z}" height="${H*z}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">${links}${doors}${extras}${rooms}</svg></div>
+  <svg class="compass" viewBox="0 0 100 100" width="84" height="84" role="img" aria-label="Compass: north is up">
+    <circle cx="50" cy="50" r="31" class="c-ring"/><circle cx="50" cy="50" r="27" class="c-ring thin"/>
+    <path d="M50 22 L56 44 L78 50 L56 56 L50 78 L44 56 L22 50 L44 44 Z" class="c-star"/>
+    <path d="M50 22 L56 44 L50 50 L44 44 Z" class="c-north"/>
+    <path d="M50 50 L56 44 L78 50 Z M50 50 L56 56 L50 78 Z M50 50 L44 56 L22 50 Z" class="c-shade"/>
+    <circle cx="50" cy="50" r="3" class="c-hub"/>
+    <text x="50" y="15" class="c-n">N</text><text x="50" y="96" class="c-l">S</text>
+    <text x="93" y="55" class="c-l">E</text><text x="7" y="55" class="c-l">W</text>
+  </svg></div>
   <div class="row"><span class="legend grow"><span><svg width="26" height="12"><line x1="2" y1="6" x2="24" y2="6" stroke="currentColor" stroke-width="6"/></svg> Passage</span>
       <span><svg width="14" height="18"><rect x="3" y="1" width="8" height="16" fill="none" stroke="currentColor" stroke-width="2"/></svg> Door</span>
       <span><svg width="14" height="18"><rect x="3" y="1" width="8" height="16" fill="var(--blood)"/></svg> Locked</span></span>
