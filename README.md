@@ -41,12 +41,6 @@ Everything is saved in the browser on the device you play on. There are no accou
 
 Use **Books → Backup and restore** to copy your adventures to another device or keep a backup.
 
-## Updating the app
-
-1. Replace the changed files in this repository.
-2. In `sw.js`, change `VERSION` to a new value (for example `'9'`) so phones pick up the update.
-3. Commit and push. Phones get the new version the next time the app is opened once or twice.
-
 ## Credits
 
 Fonts: Pirata One, Alegreya and Alegreya SC, used under the SIL Open Font License (see the `fonts` folder).
