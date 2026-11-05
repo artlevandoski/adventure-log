@@ -1,5 +1,5 @@
 // Adventure Log offline support. Change VERSION whenever you publish an update.
-const VERSION = '2';
+const VERSION = '3';
 const CACHE = 'adventure-log-' + VERSION;
 const ASSETS = ["./", "index.html", "manifest.webmanifest", "icons/icon-192.png", "icons/icon-512.png", "icons/icon-maskable-512.png", "icons/apple-touch-icon.png", "icons/favicon-48.png", "fonts/pirata-one-latin-400-normal.woff2", "fonts/alegreya-latin-400-normal.woff2", "fonts/alegreya-latin-400-italic.woff2", "fonts/alegreya-latin-500-normal.woff2", "fonts/alegreya-latin-700-normal.woff2", "fonts/alegreya-sc-latin-500-normal.woff2", "fonts/alegreya-sc-latin-700-normal.woff2"];
 

@@ -240,24 +240,24 @@ const PRESETS = {
     equipment:STD_KIT,provisions:10,heal:4,gold:0,potions:true,magicRoll:'',
     blurb:'Find the Warlock Zagor’s treasure deep inside Firetop Mountain.'},
   deathtrap:{id:'deathtrap',no:'2',title:'Deathtrap Dungeon',authors:IL,sheet:'standard',equipment:STD_KIT,provisions:10,heal:4,gold:0,potions:true,
-    pending:'Starting kit, gold and potion not yet checked against the book.',blurb:'Enter Baron Sukumvit’s labyrinth in Fang and try to come out alive.'},
+    blurb:'Enter Baron Sukumvit’s labyrinth in Fang and try to come out alive.'},
   thieves:{id:'thieves',no:'3',title:'City of Thieves',authors:IL,sheet:'standard',equipment:STD_KIT,provisions:10,heal:4,gold:0,potions:true,
-    pending:'Starting kit, gold and potion not yet checked against the book.',blurb:'Search the streets of Port Blacksand for help against a night-time terror.'},
+    blurb:'Search the streets of Port Blacksand for help against a night-time terror.'},
   citadel:{id:'citadel',no:'4',title:'The Citadel of Chaos',authors:SJ,sheet:'magic',magicRoll:'2d6+6',equipment:['Sword','Leather armour','Backpack'],provisions:0,heal:4,gold:0,potions:false,
     pending:'Magic score (2 dice + 6) is confirmed. Starting kit and spell list not yet checked against the book.',blurb:'Storm the citadel of the sorcerer Balthus Dire with spells as your weapons.'},
   forest:{id:'forest',no:'5',title:'The Forest of Doom',authors:IL,sheet:'standard',equipment:STD_KIT,provisions:10,heal:4,gold:0,potions:true,
-    pending:'Starting gold and kit not yet checked against the book.',blurb:'Hunt Darkwood Forest for the lost pieces of a dwarven war-hammer.'},
+    blurb:'Hunt Darkwood Forest for the lost pieces of a dwarven war-hammer.'},
   lizard:{id:'lizard',no:'6',title:'Island of the Lizard King',authors:IL,sheet:'standard',equipment:STD_KIT,provisions:10,heal:4,gold:0,potions:true,
-    pending:'Starting kit, gold and potion not yet checked against the book.',blurb:'Sail to Fire Island to free the captives of the Lizard King.'},
+    blurb:'Sail to Fire Island to free the captives of the Lizard King.'},
   scorpion:{id:'scorpion',no:'7',title:'Scorpion Swamp',authors:SJ,sheet:'standard',equipment:['Sword','Chainmail armour','Backpack'],provisions:0,heal:4,gold:0,potions:false,spells:true,
     choice:{label:'Your patron',options:['Selator (Good)','Grimslade (Evil)','Poomchukker (Neutral)']},
     pending:'Starting kit and the wizard choice are confirmed. Spell rules not yet checked against the book.',blurb:'Cross the treacherous swamp on a quest for one of three wizards.'},
   snowwitch:{id:'snowwitch',no:'8',title:'Caverns of the Snow Witch',authors:IL,sheet:'standard',equipment:STD_KIT,provisions:10,heal:4,gold:0,potions:true,
-    pending:'Starting kit, gold and potion not yet checked against the book.',blurb:'Track the Snow Witch to her ice caverns in the frozen north.'},
+    blurb:'Track the Snow Witch to her ice caverns in the frozen north.'},
   hell:{id:'hell',no:'9',title:'House of Hell',titles:['House of Hell','House of Hades'],authors:SJ,sheet:'standard',equipment:[],provisions:0,heal:4,gold:0,potions:false,fear:'1d6+6',
     pending:'Fear score and starting with nothing are confirmed. The penalty for fighting unarmed is not yet checked against the book.',blurb:'Stranded on a stormy night, you knock on the door of the wrong house.'},
   havoc:{id:'havoc',no:'10',title:'Creature of Havoc',authors:SJ,sheet:'standard',equipment:[],provisions:0,heal:4,gold:0,potions:false,
-    pending:'Its special combat rules (instant kills on doubles, lighter wounds, Luck to stop a wound) are not built in yet. Apply them by hand for now.',blurb:'You wake as a nameless beast and must discover what you are.'}
+    tip:'Special combat rules apply in this book (see its rules pages). The Fight tab doesn\u2019t apply them automatically yet.',blurb:'You wake as a nameless beast and must discover what you are.'}
 };
 const POTIONS = {
   Skill:{label:'Potion of Skill',does:'Restores Skill to its Initial level'},
@@ -409,6 +409,7 @@ function vBooks(){
         <p class="small muted">${esc(cfg.authors||'')}</p>
         ${cfg.blurb?`<p class="small">${esc(cfg.blurb)}</p>`:''}
         ${cfg.pending?`<p class="small muted">* ${esc(cfg.pending)}</p>`:''}
+        ${cfg.tip?`<p class="small muted">${esc(cfg.tip)}</p>`:''}
         <div class="row small"><span class="tag">${cfg.sheet==='magic'?'Magic sheet':cfg.fear?'Fear score':'Standard sheet'}</span>
           ${runs.length?`<span class="muted">${runs.length} adventure${runs.length>1?'s':''} · ${fallen} fallen · ${won} won</span>`:'<span class="muted">Not yet attempted</span>'}</div>
         ${act?`<p class="small"><b>${esc(act.name)}</b> — Skill ${act.skill.cur}, Stamina ${act.stamina.cur}, Luck ${act.luck.cur} · ${statusWord(act)}</p>`:''}
@@ -449,7 +450,7 @@ function vNew(){
     <h2>Create your adventurer</h2>
     <label class="f">Name<input type="text" id="draftName" value="${esc(d.name)}" maxlength="40" placeholder="Unnamed adventurer"></label>
   </section>
-  ${cfg.pending?`<p class="small muted">* ${esc(cfg.pending)}</p>`:''}
+  ${cfg.pending?`<p class="small muted">* ${esc(cfg.pending)}</p>`:''}${cfg.tip?`<p class="small muted">${esc(cfg.tip)}</p>`:''}
   <div class="stats ${cfg.sheet==='magic'||cfg.fear?'four':''} ${d.justRolled?'rolling':''}">
     ${st('skill','Skill','1 die + 6')}${st('stamina','Stamina','2 dice + 12')}${st('luck','Luck','1 die + 6')}
     ${cfg.sheet==='magic'?st('magic','Magic',esc(cfg.magicRoll||'2d6+6').replace('d6',' dice')):''}
