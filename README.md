@@ -16,7 +16,7 @@ A free, phone-friendly adventure sheet for playing Fighting Fantasy gamebooks. K
 It works in any web browser, and you can add it to your home screen so it opens like an app and works with no signal.
 
 **iPhone or iPad**
-1. Open [adventuresheet.app](https://adventuresheet.app) in **Safari**.
+1. Open [adventuresheet.app](https://adventuresheet.app) in your web browser.
 2. Tap the **Share** button, then **Add to Home Screen**, then **Add**.
 3. Open it once from the home screen while you're online. After that it works offline.
 
