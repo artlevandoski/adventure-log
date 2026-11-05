@@ -1,6 +1,6 @@
 {
-  "name": "Adventure Log",
-  "short_name": "Adventure Log",
+  "name": "Adventure Sheet",
+  "short_name": "Adventure Sheet",
   "description": "Adventure sheet for Fighting Fantasy gamebooks",
   "start_url": "./",
   "scope": "./",

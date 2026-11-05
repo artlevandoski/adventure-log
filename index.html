@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Firetop Adventure Log</title>
+<title>Adventure Sheet</title>
 <meta name="description" content="A phone-friendly adventure sheet for Fighting Fantasy gamebooks: stats, combat, Luck tests, inventory, paragraph trail and dungeon maps.">
 <meta name="theme-color" content="#151413">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Adventure Log">
+<meta name="apple-mobile-web-app-title" content="Adventure Sheet">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="icons/favicon-48.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -220,7 +220,7 @@ nav.tabs button[aria-current="page"]{opacity:1;box-shadow:inset 0 3px 0 var(--bl
 <body>
 
 <header class="top"><div class="in">
-  <div class="grow" style="flex:1;min-width:0"><h1 id="hTitle">Adventure Log</h1><span class="sub" id="hSub"></span></div>
+  <div class="grow" style="flex:1;min-width:0"><h1 id="hTitle">Adventure Sheet</h1><span class="sub" id="hSub"></span></div>
   <button class="btn sm" id="undoBtn" data-act="undo" hidden>Undo</button>
   <span class="sync" id="sync">Loading</span>
 </div></header>
@@ -235,6 +235,32 @@ nav.tabs button[aria-current="page"]{opacity:1;box-shadow:inset 0 3px 0 var(--bl
 /* ---------- book presets ---------- */
 const STD_KIT=['Sword','Leather armour','Lantern','Backpack'];
 const SJ='Steve Jackson', IL='Ian Livingstone';
+const CITADEL_SPELLS=[
+  {name:'Creature Copy',desc:'Conjures a copy of the creature you’re fighting, under your control.'},
+  {name:'E.S.P.',desc:'Lets you sense minds or what lies hidden. It can mislead.'},
+  {name:'Fire',desc:'Conjures fire to scare off or hold back creatures.'},
+  {name:'Fool’s Gold',desc:'Makes rock look like gold for a short while.'},
+  {name:'Illusion',desc:'Creates a convincing illusion until something breaks it.'},
+  {name:'Levitation',desc:'Makes an object, an opponent or you float.'},
+  {name:'Luck',restore:'luck',desc:'Restores half your Initial Luck, rounded down. Not during a battle.'},
+  {name:'Shielding',desc:'An invisible shield against physical things, but not magic.'},
+  {name:'Skill',restore:'skill',desc:'Restores half your Initial Skill, rounded down. Not during a battle.'},
+  {name:'Stamina',restore:'stamina',desc:'Restores half your Initial Stamina, rounded down. Not during a battle.'},
+  {name:'Strength',desc:'Greatly increases your strength, but it’s hard to control.'},
+  {name:'Weakness',desc:'Makes a strong creature puny. It doesn’t work on every creature.'}];
+const SWAMP_SPELLS=[
+  {name:'Skill',group:'Neutral',restore:'skill',desc:'Restores half your Initial Skill, rounded up. Not during combat.'},
+  {name:'Stamina',group:'Neutral',restore:'stamina',desc:'Restores half your Initial Stamina, rounded up. Not during combat.'},
+  {name:'Luck',group:'Neutral',restore:'luck',desc:'Restores half your Initial Luck, rounded up. Not during combat.'},
+  {name:'Fire',group:'Neutral',desc:'Sets one medium-sized object alight.'},
+  {name:'Ice',group:'Neutral',desc:'Freezes water into ice.'},
+  {name:'Illusion',group:'Neutral',desc:'A small, brief illusion. Acting against it breaks it.'},
+  {name:'Friendship',group:'Good',desc:'Makes one creature friendlier towards you.'},
+  {name:'Growth',group:'Good',desc:'Makes plants grow quickly.'},
+  {name:'Bless',group:'Good',desc:'Gives another being 3 Skill, Luck and Stamina back. Never yourself.'},
+  {name:'Fear',group:'Evil',desc:'Makes one creature afraid of you.'},
+  {name:'Withering',group:'Evil',desc:'Makes plants wither.'},
+  {name:'Curse',group:'Evil',curse:true,desc:'Very powerful. You lose 1 die of Stamina when you cast it.'}];
 const PRESETS = {
   warlock:{id:'warlock',no:'1',title:'The Warlock of Firetop Mountain',authors:'Steve Jackson & Ian Livingstone',sheet:'standard',
     equipment:STD_KIT,provisions:10,heal:4,gold:0,potions:true,magicRoll:'',
@@ -243,19 +269,21 @@ const PRESETS = {
     blurb:'Enter Baron Sukumvit’s labyrinth in Fang and try to come out alive.'},
   thieves:{id:'thieves',no:'3',title:'City of Thieves',authors:IL,sheet:'standard',equipment:STD_KIT,provisions:10,heal:4,gold:0,potions:true,
     blurb:'Search the streets of Port Blacksand for help against a night-time terror.'},
-  citadel:{id:'citadel',no:'4',title:'The Citadel of Chaos',authors:SJ,sheet:'magic',magicRoll:'2d6+6',equipment:['Sword','Leather armour','Backpack'],provisions:0,heal:4,gold:0,potions:false,
-    pending:'Magic score (2 dice + 6) is confirmed. Starting kit and spell list not yet checked against the book.',blurb:'Storm the citadel of the sorcerer Balthus Dire with spells as your weapons.'},
+  citadel:{id:'citadel',no:'4',title:'The Citadel of Chaos',authors:SJ,sheet:'magic',magicRoll:'2d6+6',equipment:['Sword','Leather armour','Torch','Backpack'],provisions:0,heal:4,gold:0,potions:false,
+    spellList:CITADEL_SPELLS,spellMode:'choose',spellRound:'down',
+    blurb:'Storm the citadel of the sorcerer Balthus Dire with spells as your weapons.'},
   forest:{id:'forest',no:'5',title:'The Forest of Doom',authors:IL,sheet:'standard',equipment:STD_KIT,provisions:10,heal:4,gold:0,potions:true,
     blurb:'Hunt Darkwood Forest for the lost pieces of a dwarven war-hammer.'},
   lizard:{id:'lizard',no:'6',title:'Island of the Lizard King',authors:IL,sheet:'standard',equipment:STD_KIT,provisions:10,heal:4,gold:0,potions:true,
     blurb:'Sail to Fire Island to free the captives of the Lizard King.'},
-  scorpion:{id:'scorpion',no:'7',title:'Scorpion Swamp',authors:SJ,sheet:'standard',equipment:['Sword','Chainmail armour','Backpack'],provisions:0,heal:4,gold:0,potions:false,spells:true,
+  scorpion:{id:'scorpion',no:'7',title:'Scorpion Swamp',authors:SJ,sheet:'standard',equipment:['Sword','Chainmail armour','Helmet','Backpack'],provisions:0,heal:4,gold:0,potions:false,
+    spellList:SWAMP_SPELLS,spellMode:'gems',spellRound:'up',
     choice:{label:'Your patron',options:['Selator (Good)','Grimslade (Evil)','Poomchukker (Neutral)']},
-    pending:'Starting kit and the wizard choice are confirmed. Spell rules not yet checked against the book.',blurb:'Cross the treacherous swamp on a quest for one of three wizards.'},
+    blurb:'Cross the treacherous swamp on a quest for one of three wizards.'},
   snowwitch:{id:'snowwitch',no:'8',title:'Caverns of the Snow Witch',authors:IL,sheet:'standard',equipment:STD_KIT,provisions:10,heal:4,gold:0,potions:true,
     blurb:'Track the Snow Witch to her ice caverns in the frozen north.'},
-  hell:{id:'hell',no:'9',title:'House of Hell',titles:['House of Hell','House of Hades'],authors:SJ,sheet:'standard',equipment:[],provisions:0,heal:4,gold:0,potions:false,fear:'1d6+6',
-    pending:'Fear score and starting with nothing are confirmed. The penalty for fighting unarmed is not yet checked against the book.',blurb:'Stranded on a stormy night, you knock on the door of the wrong house.'},
+  hell:{id:'hell',no:'9',title:'House of Hell',titles:['House of Hell','House of Hades'],authors:SJ,sheet:'standard',equipment:[],provisions:0,heal:4,gold:0,potions:false,fear:'1d6+6',unarmedStart:3,skillTestInitial:true,
+    blurb:'Stranded on a stormy night, you knock on the door of the wrong house.'},
   havoc:{id:'havoc',no:'10',title:'Creature of Havoc',authors:SJ,sheet:'standard',equipment:[],provisions:0,heal:4,gold:0,potions:false,
     tip:'Special combat rules apply in this book (see its rules pages). The Fight tab doesn\u2019t apply them automatically yet.',blurb:'You wake as a nameless beast and must discover what you are.'}
 };
@@ -353,7 +381,7 @@ const STANDALONE = !window.claude;
 const backupData = () => ({app:'adventure-log',version:1,exported:new Date().toISOString(),books:clone(store.books)});
 function restoreFrom(txt,fromFile){
   let data; try{ data=JSON.parse(txt.trim()); }catch(e){ toast('That isn’t a backup. Copy the whole backup text and try again.'); return; }
-  if(!data || data.app!=='adventure-log' || typeof data.books!=='object'){ toast('That isn’t an Adventure Log backup.'); return; }
+  if(!data || data.app!=='adventure-log' || typeof data.books!=='object'){ toast('That isn’t an Adventure Sheet backup.'); return; }
   if(!fromFile && ui.armDelete!=='restore'){ ui.armDelete='restore'; render(); return; }
   ui.armDelete=null; let n=0;
   Object.entries(data.books).forEach(([id,b])=>{ const cur=store.books[id];
@@ -380,7 +408,7 @@ let toastT; function toast(t){ const el=$('#toast'); el.textContent=t; el.hidden
 function render(){
   const run=curRun(), cfg=ui.bookId?bookCfg(ui.bookId):null;
   if(['sheet','fight','journey','map'].includes(ui.view) && !run) ui.view = ui.bookId&&ui.draft ? 'new' : 'books';
-  $('#hTitle').textContent = cfg && ui.view!=='books' ? bookTitle(ui.bookId) : 'Adventure Log';
+  $('#hTitle').textContent = cfg && ui.view!=='books' ? bookTitle(ui.bookId) : 'Adventure Sheet';
   $('#hSub').textContent = ui.view==='books' ? 'Fighting Fantasy gamebooks' : ui.view==='new' ? 'New adventurer' : run ? `${run.name} · ${statusWord(run)}` : '';
   $('#undoBtn').hidden = !undoStack.length || ui.view==='books';
   $('#tabs').hidden = !run || ui.view==='new' || ui.view==='books' && !run;
@@ -461,6 +489,8 @@ function vNew(){
     <p class="small muted">Two measures. Drink one at any time during the adventure.</p>
     ${Object.entries(POTIONS).map(([k,p])=>`<label class="row" style="gap:10px;flex-wrap:nowrap"><input type="radio" name="potion" value="${k}" ${d.potion===k?'checked':''} style="width:22px;height:22px;flex:none"><span><b>${p.label}</b><br><span class="small muted">${p.does}</span></span></label>`).join('')}
   </section>`:''}
+  ${cfg.unarmedStart&&d.skill?`<p class="small"><b>No weapon yet:</b> you start with a Skill of ${Math.max(0,d.skill.total-cfg.unarmedStart)}, which is ${cfg.unarmedStart} below your Initial ${d.skill.total}. Finding a WEAPON raises it again.</p>`:''}
+  ${cfg.spellMode==='choose'&&d.magic?vSpellPicker(cfg,d):''}
   ${cfg.choice?`<section class="box"><h3>${esc(cfg.choice.label)}</h3>
     ${cfg.choice.options.map(o=>`<label class="row" style="gap:10px;flex-wrap:nowrap"><input type="radio" name="choice" value="${esc(o)}" ${d.choice===o?'checked':''} style="width:22px;height:22px;flex:none"><span>${esc(o)}</span></label>`).join('')}</section>`:''}
   <section class="box"><h3>Starting kit</h3>
@@ -469,16 +499,43 @@ function vNew(){
       <label class="f">Gold Pieces<input type="number" id="kitGold" min="0" value="${d.kit.gold}"></label></div>
     <p class="small muted">${cfg.pending?'Check these against the equipment page of your book.':'Set from the book’s equipment page.'}</p></section>
   <div class="row"><button class="btn ghost" data-act="cancelnew">Cancel</button>
-    <button class="btn ink grow" data-act="begin" ${rolled && (!cfg.potions||d.potion) && (!cfg.choice||d.choice)?'':'disabled'}>Begin at paragraph 1</button></div>`;
+    <button class="btn ink grow" data-act="begin" ${rolled && (!cfg.potions||d.potion) && (!cfg.choice||d.choice) && (cfg.spellMode!=='choose'||spellTotal(d.spellbook)===d.magic?.total)?'':'disabled'}>Begin at paragraph 1</button></div>`;
 }
 
 function statBox(r,k,label){
   const s=r[k]; const low=s.cur<=Math.max(2,Math.floor(s.init/4));
   return `<div class="stat"><span class="name">${label}</span>
-    <span class="val ${low?'low':''}">${s.cur}</span><span class="init">Initial ${s.init}</span>
+    <span class="val ${low?'low':''}">${s.cur}</span><span class="init">Initial ${s.init}</span>${k==='skill'&&bookCfg(ui.bookId)?.unarmedStart?`<span class="init" style="text-align:center">Tests use Initial</span>`:''}
     <div class="pm"><button data-act="stat" data-k="${k}" data-d="-1" aria-label="${label} down">−</button><button data-act="stat" data-k="${k}" data-d="1" aria-label="${label} up">+</button></div>
     ${ui.editInit?`<div class="pm mini"><button data-act="init" data-k="${k}" data-d="-1" aria-label="Initial ${label} down">−</button><button data-act="init" data-k="${k}" data-d="1" aria-label="Initial ${label} up">+</button></div>`:''}
   </div>`;
+}
+const spellTotal = b => Object.values(b||{}).reduce((a,n)=>a+(+n||0),0);
+function spellRow(sp,count,buttons){
+  return `<div class="item"><div class="nm" style="cursor:default">${esc(sp.name)}<small>${esc(sp.desc)}</small></div>
+    <span class="qty" aria-label="${count} left">×${count}</span>${buttons}</div>`;
+}
+function vSpellPicker(cfg,d){
+  const need=d.magic.total, have=spellTotal(d.spellbook);
+  return `<section class="box heavy"><div class="box-head"><h3>Choose ${need} spells</h3><span class="tag ${have===need?'won':''}">${have} of ${need}</span></div>
+    <p class="small muted">Your Magic score is how many spells you take. You can take the same spell more than once.</p>
+    <div class="inv-group">${cfg.spellList.map(sp=>{ const n=d.spellbook[sp.name]||0;
+      return spellRow(sp,n,`<div class="pm mini"><button data-act="pickspell" data-s="${esc(sp.name)}" data-d="-1" aria-label="One fewer ${esc(sp.name)}" ${n?'':'disabled'}>−</button><button data-act="pickspell" data-s="${esc(sp.name)}" data-d="1" aria-label="One more ${esc(sp.name)}" ${have>=need?'disabled':''}>+</button></div>`); }).join('')}</div>
+  </section>`;
+}
+function vSpells(r,cfg){
+  const book=r.spellbook||{}, left=spellTotal(book), gems=cfg.spellMode==='gems';
+  const list=gems?cfg.spellList:cfg.spellList.filter(sp=>book[sp.name]>0);
+  const groups=[...new Set(list.map(sp=>sp.group||''))];
+  const rows=sp=>{ const n=book[sp.name]||0;
+    return spellRow(sp,n,`${gems?`<button class="chip" data-act="gem" data-s="${esc(sp.name)}" aria-label="Add a ${esc(sp.name)} Spell Gem">+ Gem</button>`:''}
+      <button class="chip" data-act="cast" data-s="${esc(sp.name)}" ${n?'':'disabled'}>Cast</button>`); };
+  return `<section class="box"><div class="box-head"><h3>${gems?'Spell Gems':'Magic Spells'}</h3><span class="tag">${left} left</span></div>
+    <p class="small muted">${gems?'Add a gem when a wizard gives you one. Each gem casts its spell once, then vanishes.':'Casting crosses a spell off, even if it doesn’t work.'}
+      Skill, Stamina and Luck spells change your scores for you. Cast them outside combat${gems?' or just before the first blow':''}.</p>
+    ${list.length?groups.map(g=>`<div class="inv-group">${g?`<h4>${esc(g.toUpperCase())} SPELLS</h4>`:''}${list.filter(sp=>(sp.group||'')===g).map(rows).join('')}</div>`).join(''):'<p class="small muted">All your spells are used up.</p>'}
+    <label class="f">Spell notes<textarea id="spells" style="min-height:70px" placeholder="Where you got them, what worked">${esc(r.spells||'')}</textarea></label>
+  </section>`;
 }
 function fearBox(r){
   const f=r.fear, near=f.cur>=f.max-2;
@@ -525,7 +582,7 @@ function vSheet(){
 
   ${vInventory(r)}
 
-  ${r.magic||cfg.spells?`<section class="box"><h3>Magic Spells</h3><textarea id="spells" placeholder="Spells chosen and how many of each">${esc(r.spells||'')}</textarea></section>`:''}`;
+  ${cfg.spellList?vSpells(r,cfg):r.magic?`<section class="box"><h3>Magic Spells</h3><textarea id="spells" placeholder="Spells chosen and how many of each">${esc(r.spells||'')}</textarea></section>`:''}`;
 }
 
 function itemLine(e){
@@ -554,7 +611,8 @@ function vInventory(r){
       </div>`:''}`; };
   return `<section class="box"><div class="box-head"><h3>Equipment &amp; Treasure</h3><span class="small muted">Tap an item to edit</span></div>
     ${groups.length?groups.map(([k,a])=>`<div class="inv-group"><h4>${KINDS[k].toUpperCase()}</h4>${a.map(row).join('')}</div>`).join(''):'<p class="small muted">Nothing carried.</p>'}
-    ${!weaponInHand(r)?`<p class="small" style="color:var(--blood)">No weapon in hand. Check your book for a penalty when fighting unarmed and set it on the Fight tab.</p>`:''}
+    ${bookCfg(ui.bookId)?.unarmedStart?`<p class="small muted">In this book a WEAPON adds Skill instead. When you find one, add it here and raise Skill by the points the book gives, up to your Initial Skill. Leave its Attack at 0.</p>`
+      :!weaponInHand(r)?`<p class="small" style="color:var(--blood)">No weapon in hand. Check your book for a penalty when fighting unarmed and set it on the Fight tab.</p>`:''}
     <form id="addEquip" class="row" style="flex-wrap:nowrap;gap:6px"><input type="text" id="equipText" placeholder="Brass key 111" class="grow" style="min-width:0">
       <select id="equipKind" style="width:auto;flex:none" aria-label="Item type"><option value="auto">Type</option>${Object.entries(KIND1).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select>
       <button class="btn sm ink" type="submit">Add</button></form>
@@ -708,7 +766,7 @@ function vMap(){
 /* ---------- actions ---------- */
 function newRun(id){
   const cfg=bookCfg(id); ui.bookId=id;
-  ui.draft={name:'',skill:null,stamina:null,luck:null,magic:null,fear:null,potion:null,choice:null,kit:{equipment:(cfg.equipment||[]).join(', '),provisions:+cfg.provisions||0,gold:+cfg.gold||0}};
+  ui.draft={spellbook:{},name:'',skill:null,stamina:null,luck:null,magic:null,fear:null,potion:null,choice:null,kit:{equipment:(cfg.equipment||[]).join(', '),provisions:+cfg.provisions||0,gold:+cfg.gold||0}};
   ui.view='new'; undoStack.length=0; render(); window.scrollTo(0,0);
 }
 function capAdd(s,d){ s.cur=Math.max(0,Math.min(s.init,s.cur+d)); }
@@ -730,8 +788,8 @@ document.addEventListener('click',e=>{
       d.justRolled=true; render(); d.justRolled=false; break; }
     case 'begin':{ const d=ui.draft; const id=ui.bookId; const runId=uid();
       const run={id:runId,name:d.name.trim()||'Unnamed adventurer',created:Date.now(),status:'alive',
-        skill:{init:d.skill.total,cur:d.skill.total},stamina:{init:d.stamina.total,cur:d.stamina.total},luck:{init:d.luck.total,cur:d.luck.total},
-        magic:d.magic?{init:d.magic.total,cur:d.magic.total}:null,fear:d.fear?{max:d.fear.total,cur:0}:null,choice:d.choice||'',spells:'',
+        skill:{init:d.skill.total,cur:Math.max(0,d.skill.total-(+cfg.unarmedStart||0))},stamina:{init:d.stamina.total,cur:d.stamina.total},luck:{init:d.luck.total,cur:d.luck.total},
+        magic:d.magic?{init:d.magic.total,cur:d.magic.total}:null,fear:d.fear?{max:d.fear.total,cur:0}:null,choice:d.choice||'',spells:'',spellbook:cfg.spellMode==='choose'?{...d.spellbook}:{},
         gold:Math.max(0,+d.kit.gold||0),provisions:Math.max(0,+d.kit.provisions||0),
         equipment:String(d.kit.equipment||'').split(',').map(x=>x.trim()).filter(Boolean).map(x=>makeItem(x)),fightMod:0,potion:d.potion?{type:d.potion,doses:2}:null,
         para:1,path:[1],notes:'',monsters:[],log:[]};
@@ -739,20 +797,28 @@ document.addEventListener('click',e=>{
       ui.draft=null; ui.view='sheet'; ui.round=null; ui.luckTest=null; ui.freeRoll=null; touch(id); render(); window.scrollTo(0,0); toast('Turn to paragraph 1'); break; }
     case 'undo':{ const u=undoStack.pop(); if(!u) break; if(u.doc) store.books[u.id]=u.doc; else delete store.books[u.id]; ui.round=null; touch(u.id); render(); toast('Undone'); break; }
     case 'toggleinit': ui.editInit=!ui.editInit; render(); break;
+    case 'pickspell':{ const b=ui.draft.spellbook, k=t.dataset.s; b[k]=Math.max(0,(b[k]||0)+(+t.dataset.d)); if(!b[k]) delete b[k]; render(); break; }
+    case 'gem': mutate(()=>{ r.spellbook=r.spellbook||{}; r.spellbook[t.dataset.s]=(r.spellbook[t.dataset.s]||0)+1; }); toast(`${t.dataset.s} gem added`); break;
+    case 'cast':{ const sp=cfg.spellList.find(x=>x.name===t.dataset.s); if(!sp||!(r.spellbook?.[sp.name]>0)) break; let msg=`Cast ${sp.name}`;
+      mutate(()=>{ r.spellbook[sp.name]--; if(!r.spellbook[sp.name]) delete r.spellbook[sp.name];
+        if(sp.restore){ const st=r[sp.restore], half=cfg.spellRound==='up'?Math.ceil(st.init/2):Math.floor(st.init/2), before=st.cur; capAdd(st,half);
+          msg=`${sp.name} restored ${st.cur-before} (now ${st.cur})`; }
+        if(sp.curse){ const roll=d6(); r.stamina.cur=Math.max(0,r.stamina.cur-roll); msg=`Curse cast. You lose ${roll} Stamina`; }
+        log(r,msg); }); toast(msg); break; }
     case 'fear': mutate(()=>{ r.fear.cur=Math.max(0,r.fear.cur+(+t.dataset.d)); }); break;
     case 'titlepick':{ const id=t.dataset.id; bookDoc(id).titleIdx=+t.dataset.i; touch(id); render(); break; }
     case 'copybackup':{ const txt=JSON.stringify(backupData());
       const done=()=>toast('Backup copied. Paste it into a note or the Restore box.');
       try{ navigator.clipboard.writeText(txt).then(done,()=>{ ui.showBackup=true; render(); }); }catch(_){ ui.showBackup=true; render(); } break; }
     case 'filebackup':{ const blob=new Blob([JSON.stringify(backupData(),null,1)],{type:'application/json'});
-      const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`adventure-log-backup-${new Date().toISOString().slice(0,10)}.json`;
+      const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`adventure-sheet-backup-${new Date().toISOString().slice(0,10)}.json`;
       document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },500); break; }
     case 'restore':{ const txt=$('#restoreText')?.value||''; restoreFrom(txt); break; }
     case 'stat': mutate(()=>{ const s=r[t.dataset.k]; capAdd(s,+t.dataset.d); }); break;
     case 'init': mutate(()=>{ const s=r[t.dataset.k]; s.init=Math.max(0,s.init+(+t.dataset.d)); if(+t.dataset.d>0) s.cur++; s.cur=Math.min(s.cur,s.init); }); break;
     case 'testluck': mutate(()=>{ const dice=[d6(),d6()], vs=r.luck.cur, ok=sum(dice)<=vs; r.luck.cur=Math.max(0,r.luck.cur-1);
       ui.luckTest={kind:'luck',dice,vs,ok,fresh:true}; ui.freeRoll=null; }); ui.luckTest.fresh=false; break;
-    case 'testskill':{ const dice=[d6(),d6()]; ui.luckTest={kind:'skill',dice,vs:r.skill.cur,ok:sum(dice)<=r.skill.cur,fresh:true}; ui.freeRoll=null; render(); ui.luckTest.fresh=false; break; }
+    case 'testskill':{ const dice=[d6(),d6()], vs=cfg.skillTestInitial?r.skill.init:r.skill.cur; ui.luckTest={kind:'skill',dice,vs,ok:sum(dice)<=vs,fresh:true}; ui.freeRoll=null; render(); ui.luckTest.fresh=false; break; }
     case 'free': ui.freeRoll={dice:Array.from({length:+t.dataset.n},d6),fresh:true}; ui.luckTest=null; render(); ui.freeRoll.fresh=false; break;
     case 'drink': mutate(()=>{ const p=r.potion; p.doses--; if(p.type==='Skill') r.skill.cur=r.skill.init;
       else if(p.type==='Strength') r.stamina.cur=r.stamina.init; else { r.luck.init++; r.luck.cur=r.luck.init; } }); toast(`Drank the ${POTIONS[r.potion.type].label}`); break;

@@ -1,4 +1,4 @@
-# Adventure Log
+# Adventure Sheet
 
 A phone-friendly adventure sheet for playing Fighting Fantasy gamebooks.
 
